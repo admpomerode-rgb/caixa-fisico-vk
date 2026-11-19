@@ -183,6 +183,29 @@ html[data-tema=escuro] .dk-box .dk-tot{background:linear-gradient(135deg,#2ee6c5
 @media (max-height:760px){.pixcard .pm{display:none}.pixcard .pq{width:min(250px,34vh)}.pixcard .pv{font-size:30px}.pixcard{padding:12px 18px 14px}}
 .dk-2b{display:grid;grid-template-columns:1.25fr 1fr;gap:8px}.dk-2b .btn{margin-top:10px}
 .btn.pix{background:linear-gradient(135deg,#0fb5a6,#1e88e5);color:#fff;border:0}
+
+/* ===== cliente na venda direta ===== */
+.cli-busca{display:flex;gap:6px;align-items:center}.cli-busca input{flex:1;min-width:0;min-height:42px;font-size:15px;padding:8px 12px}.cli-busca .sair{padding:9px 11px;white-space:nowrap}
+.cli-sel{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;background:linear-gradient(135deg,rgba(46,230,197,.12),rgba(74,168,255,.12));border:1px solid rgba(47,123,255,.35);border-radius:12px;padding:8px 10px}
+.cli-sel b{font-size:15px}.cli-sel small{display:block;color:var(--soft);font-size:12.5px;line-height:1.35}.cli-sel .ok{color:var(--ok);font-weight:700}.cli-sel .bad{color:var(--bad);font-weight:800}
+.dk-cli{padding:8px 16px;border-bottom:1px solid var(--bd)}
+.dk-lado .cli-sel small{font-size:12px}
+.vdesc .bad,.cli-sel a{color:var(--bad);font-weight:700}.vdesc{font-size:13px;color:var(--soft);text-align:left;margin:-2px 0 2px}.vdesc b{color:var(--ok)}
+
+.dk-abas{flex-wrap:wrap;overflow:visible}.dk-aba.g{background:var(--gc);color:#fff;border-color:transparent;opacity:.62}.dk-aba.g.on{opacity:1;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 5px var(--gc)}
+.dk-grade{scrollbar-width:none}.dk-grade::-webkit-scrollbar{display:none}
+.dk-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.dk-tile{position:relative;text-align:left;background:var(--card);border:1px solid var(--bd);border-top:5px solid var(--gc,#3B6FE0);border-radius:14px;padding:10px 12px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;cursor:pointer;color:var(--tx);box-shadow:var(--sombra);font-family:inherit}
+.dk-tile:hover{transform:translateY(-1px);border-color:var(--gc)}.dk-tile.alvo{outline:3px solid var(--ac)}
+.dk-tile .nm{font-size:15px;line-height:1.2;padding-right:30px}.dk-tile .pr{font-family:var(--mono);font-weight:700;font-size:16px;color:var(--ac2)}.dk-tile .pr small{font-weight:500;color:var(--soft);font-size:11px}
+.dk-tile .qb{position:absolute;right:8px;top:8px;min-width:26px;text-align:center;border-radius:99px;background:var(--ok);color:#fff;font-weight:800;font-size:13px;padding:2px 8px}.dk-tile .qb:empty{display:none}
+html[data-tema=escuro] .dk-tile .pr{color:#8FB6FF}
+.org-esq{width:250px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;overflow:auto}.org-dir{flex:1;min-width:0;overflow:auto;padding-right:6px}#orgCorpo{display:flex;gap:16px}
+.og{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bd);border-left:6px solid var(--gc);border-radius:10px;padding:7px 8px;cursor:pointer;background:var(--card)}.og.on{background:#E3ECFD;border-color:var(--gc)}html[data-tema=escuro] .og.on{background:#1d3157}.og-n small{color:var(--soft)}
+.og-b button,.op button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:7px;width:26px;height:26px;cursor:pointer;margin-left:3px}
+.org-cores{display:flex;gap:8px;margin:4px 0}.org-cores button{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer}.org-cores button.on{border-color:var(--tx)}
+.org-sel{border:1px solid var(--bd);border-radius:10px;max-height:112px;overflow:auto}.op{display:flex;justify-content:space-between;align-items:center;padding:3px 9px;border-bottom:1px solid var(--bd);font-size:14px}.op:last-child{border-bottom:0}
+.org-add{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;max-height:96px;overflow:auto}.org-add button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:6px 11px;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -313,6 +336,9 @@ function pixConfigurado(){
   return false;
 }
 let pixVendaOk=0;
+const CORES_G=['#3B6FE0','#D98F2B','#1E9E6B','#7A6BD6','#D5473F','#3AA6D9','#D96AA7','#8A94A6'];
+let vendaCfg=(function(){ try{ const j=JSON.parse(localStorage.getItem('caixa_vendacfg')||'null'); return j&&Array.isArray(j.grupos)?j:null; }catch(e){ return null; } })(), vkSeletor=[], grpSel='', orgD=null, orgG=0, orgQ='';
+let vkClientes=[], vkTabelas=[], vkPromos=[], cliSel=null, cliUsos=0, descOff=false;
 function pixAbrir(o){   // devolve true se o operador confirmou que o Pix entrou
   return new Promise(res=>{
     const px=conf.pix; let payload, svg;
@@ -450,29 +476,127 @@ async function carregarProdutos(){
   const vdb=await vkDb(); const ps=await vdb.collection('produtos').get({source:'server'});
   try{ const rs=await vdb.collection('representantes').get({source:'server'}); vkReps=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.nome && !r.arquivado && r.ativo!==false).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR')); }catch(e){ console.error('representantes',e); vkReps=[]; }
   try{ const cs=await vdb.collection('categorias').get({source:'server'}); vkCats=cs.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.nome).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR')); }catch(e){ vkCats=[]; }
+  try{ const cl=await vdb.collection('clientes').get({source:'server'}); vkClientes=cl.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.nome && !c.arquivado); }catch(e){ console.error('clientes',e); vkClientes=[]; }
+  try{ const cg=await vdb.collection('config').doc('geral').get({source:'server'}); vkTabelas=(cg.exists&&Array.isArray(cg.data().tabelasPreco))?cg.data().tabelasPreco:[]; vkPromos=(cg.exists&&Array.isArray(cg.data().promocoesProdutos))?cg.data().promocoesProdutos:[]; vkSeletor=(cg.exists&&Array.isArray(cg.data().seletorGrupos))?cg.data().seletorGrupos.filter(g=>g&&g.nome&&Array.isArray(g.produtos)).map((g,i)=>({id:g.id||('s'+i),nome:g.nome,cor:g.cor||CORES_G[i%8],produtos:g.produtos.slice()})):[]; }catch(e){ console.error('tabelas/promoções',e); vkTabelas=[]; vkPromos=[]; vkSeletor=[]; }
+  try{ const sc=await db.collection('caixa_app_config').doc('vendaTela').get(); if(sc.exists&&sc.data()&&Array.isArray(sc.data().grupos)){ vendaCfg={grupos:sc.data().grupos}; try{ localStorage.setItem('caixa_vendacfg',JSON.stringify(vendaCfg)); }catch(e){} } }catch(e){ console.error('config da tela de venda',e); }
   vkProdutos=ps.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.arquivado && p.nome).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
 }
 async function abrirVenda(){
-  carrinho=[]; buscaProd=''; repSel='';
+  carrinho=[]; buscaProd=''; repSel=''; cliSel=null; cliUsos=0; descOff=false;
   $('#app').dataset.tela='venda';
   try{ await carregarProdutos(); }
   catch(e){ delete $('#app').dataset.tela; desenhar(); await erro('Não consegui carregar os produtos', /network/i.test(e.code||e.message)?'Sem internet. Tente de novo quando tiver sinal.':(e.message||String(e))); return; }
   desenhar(); listarProds();
 }
-function fecharVenda(){ delete $('#app').dataset.tela; carrinho=[]; desenhar(); }
-function addProd(id){ const p=vkProdutos.find(x=>x.id===id); if(!p) return; const ex=carrinho.find(i=>i.produtoId===id); if(ex) ex.quantidade=r2(ex.quantidade+1); else carrinho.push({produtoId:p.id,produto:p.nome,unidade:p.unidade||'un',quantidade:1,valorUnitario:Number(p.valorPadrao)||0}); desenharCarrinho(); }
+function fecharVenda(){ delete $('#app').dataset.tela; carrinho=[]; cliSel=null; cliUsos=0; descOff=false; desenhar(); }
+
+/* ===== Cliente na venda direta: busca, cadastro, tabela de preços e desconto do Industrial ===== */
+function tabelaDe(c){ return c && c.tabelaPrecoId ? (vkTabelas.find(t=>t.id===c.tabelaPrecoId)||null) : null; }
+function baseDe(prod){ const t=tabelaDe(cliSel), v=t&&t.precos?parseFloat(t.precos[prod.id]):0; return v>0?v:(Number(prod.valorPadrao)||0); }
+function promoDe(prod){   // mesma regra do Industrial: no ar hoje, e só vale se for mais barata que o preço que o cliente já paga
+  const h=hoje(), base=baseDe(prod);
+  return vkPromos.find(r=>r&&r.produtoId===prod.id && r.ativa!==false && !(r.fim&&r.fim<h) && !(r.inicio&&r.inicio>h) && Number(prod.valorPadrao)>Number(r.precoPromocional) && Number(r.precoPromocional)>0 && Number(r.precoPromocional)<base)||null;
+}
+function precoDe(prod){ const pr=promoDe(prod); return pr?Number(pr.precoPromocional):baseDe(prod); }
+function fotoPromo(prod){ const pr=promoDe(prod); return pr?{id:pr.id,rotulo:pr.rotulo||'',precoOriginal:baseDe(prod),precoPromocional:Number(pr.precoPromocional)}:null; }
+function descRegraAtiva(c){   // mesma regra do Industrial: período, nº de pedidos ou fixo
+  const r=c&&c.descontoCliente; if(!r||!r.id||r.encerradoEm) return null; const h=hoje();
+  if(r.tipo==='periodo'){ if(r.inicio&&h<r.inicio) return null; if(r.fim&&h>r.fim) return null; }
+  if(r.tipo==='usos' && cliUsos>=(Number(r.usosMax)||0)) return null;
+  return (Number(r.percentual)>0)?r:null;
+}
+function descResumo(r){ if(r.tipo==='periodo') return 'de '+(r.inicio?dataBR(r.inicio):'hoje')+' até '+(r.fim?dataBR(r.fim):'sem data final'); if(r.tipo==='usos') return 'pedido '+(cliUsos+1)+' de '+r.usosMax; return 'fixo, sem data final'; }
+function calcVenda(){ const sub=totalCarrinho(), r=descOff?null:descRegraAtiva(cliSel), pct=r?Number(r.percentual):0, base=r2(carrinho.reduce((s,i)=>s+(i.promocao?0:i.quantidade*i.valorUnitario),0)), desc=r2(base*pct/100), eco=r2(carrinho.reduce((s,i)=>s+(i.promocao?(i.promocao.precoOriginal-i.promocao.precoPromocional)*i.quantidade:0),0)); return {sub,desc,total:r2(sub-desc),regra:r,pct,eco}; }
+function reprecificar(){ carrinho.forEach(i=>{ const p=vkProdutos.find(x=>x.id===i.produtoId); if(p){ i.valorUnitario=precoDe(p); i.promocao=fotoPromo(p); } }); desenharCarrinho(); if(typeof listarProds==='function') try{ listarProds(); }catch(e){} }
+function nomeProprio(t){ t=String(t||'').trim().replace(/\s+/g,' '); if(t!==t.toUpperCase() && t!==t.toLowerCase()) return t; return t.toLowerCase().split(' ').map((w,i)=>(i>0&&['de','da','do','das','dos','e'].includes(w))?w:w.charAt(0).toUpperCase()+w.slice(1)).join(' '); }
+async function selecionarCliente(c){
+  cliSel=c; cliUsos=0;
+  if(c && c.descontoCliente && c.descontoCliente.tipo==='usos'){ try{ const vdb=await vkDb(); const q=await vdb.collection('pedidos').where('clienteId','==',c.id).get({source:'server'}); cliUsos=q.docs.map(d=>d.data()).filter(p=>p.descontoClienteRegraId===c.descontoCliente.id && p.status!=='cancelado').length; }catch(e){ console.error('usos do desconto',e); } }
+  if(c && c.representanteId && !repSel && vkReps.some(r=>r.id===c.representanteId)){ repSel=c.representanteId; const sr=$('#vRep'); if(sr) sr.value=repSel; }
+  desenharCliente(); reprecificar();
+}
+function desenharCliente(){
+  const w=$('#vCliBox'); if(!w) return;
+  if(cliSel){
+    const t=tabelaDe(cliSel), r=descRegraAtiva(cliSel);
+    w.innerHTML='<div class="cli-sel"><div><b>👤 '+esc(cliSel.nome)+'</b><small>'+(cliSel.numeroCliente?'Nº '+esc(cliSel.numeroCliente):'Industrial')+(t?' · 📋 Tabela '+esc(t.nome):'')+'</small>'
+      +(cliSel.bloqueado?'<small class="bad">⛔ Cliente BLOQUEADO no Industrial</small>':'')
+      +(r?(descOff?'<small class="bad">🏷️ Desconto de '+esc(String(r.percentual))+'% REMOVIDO nesta venda <a href="#" id="vDescOn">aplicar de novo</a></small>':'<small class="ok" title="'+esc(descResumo(r))+'">🏷️ Desconto de '+esc(String(r.percentual))+'% ativo <a href="#" id="vDescOff">remover</a></small>'):'')
+      +'</div><button class="sair" id="vCliTrocar">Trocar</button></div>';
+    const dOff=$('#vDescOff'), dOn=$('#vDescOn');
+    if(dOff) dOff.onclick=async e=>{ e.preventDefault(); if(await confirmar('Remover o desconto?','Esta venda será feita SEM o desconto de '+r.percentual+'% do cliente.','Remover desconto')){ descOff=true; desenharCliente(); atualizarTotalVenda(); } };
+    if(dOn) dOn.onclick=e=>{ e.preventDefault(); descOff=false; desenharCliente(); atualizarTotalVenda(); };
+    $('#vCliTrocar').onclick=()=>{ cliSel=null; cliUsos=0; descOff=false; desenharCliente(); reprecificar(); };
+  } else {
+    w.innerHTML='<div class="cli-busca"><input id="vCliQ" type="search" placeholder="Nome ou nº do cliente (opcional)" autocomplete="off"><button class="sair" id="vCliBuscar">Buscar</button><button class="sair" id="vCliNovo">➕ Novo</button></div><div class="min" id="vCliMsg" style="text-align:left;margin-top:4px"></div>';
+    $('#vCliBuscar').onclick=buscarCliente; $('#vCliNovo').onclick=cadastrarCliente; $('#vCliQ').onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); buscarCliente(); } };
+  }
+  atualizarTotalVenda();
+}
+function buscarCliente(){
+  const raw=($('#vCliQ')||{}).value||'', q=norm(raw.trim()), msg=$('#vCliMsg'); if(!msg) return;
+  if(q.length<3){ msg.textContent='Digite pelo menos 3 letras do nome (ou o nº do cliente).'; return; }
+  let ach;
+  if(/^\d+$/.test(q)) ach=vkClientes.filter(c=>String(c.numeroCliente||'').trim()===q);
+  else { ach=vkClientes.filter(c=>norm(c.nome)===q); if(!ach.length) ach=vkClientes.filter(c=>norm(c.nome).includes(q)); }
+  if(ach.length===1){ selecionarCliente(ach[0]); return; }
+  /* privacidade: nunca lista nomes parecidos */
+  msg.innerHTML=ach.length?'☝️ Há mais de um cliente com esse nome. Digite o nome completo.':'Cliente não encontrado. Toque em <b>➕ Novo</b> para cadastrar.';
+}
+async function gerarNumeroCliente(vdb){
+  const local=vkClientes.reduce((m,c)=>Math.max(m,parseInt(c.numeroCliente,10)||0),0), ref=vdb.collection('config').doc('contador_clientes');
+  const tx=vdb.runTransaction(async t=>{ const sn=await t.get(ref); const ult=sn.exists?(parseInt((sn.data()||{}).ultimo,10)||0):0; const n=Math.max(ult,local)+1; t.set(ref,{ultimo:n,atualizadoEm:new Date().toISOString()}); return n; });
+  try{ const r=await Promise.race([tx,new Promise(res=>setTimeout(()=>res(null),8000))]); if(r!=null) return r; }catch(e){ console.error('contador de clientes',e); }
+  tx.catch(()=>{}); return local+1;
+}
+function cadastrarCliente(){
+  if(document.getElementById('cliOv')) return;
+  const q=($('#vCliQ')||{}).value||'';
+  const ov=document.createElement('div'); ov.id='cliOv'; ov.className='pixov';
+  ov.innerHTML='<div class="pixcard" style="text-align:left"><div class="pt" style="text-align:center">➕ Cadastrar cliente</div>'
+    +'<label>Nome do cliente *</label><input id="ccNome" autocomplete="off" value="'+esc(/^\d+$/.test(q)?'':q)+'">'
+    +'<label>Telefone / WhatsApp</label><input id="ccTel" inputmode="tel" autocomplete="off">'
+    +'<label>CPF ou CNPJ (opcional)</label><input id="ccDoc" inputmode="numeric" autocomplete="off">'
+    +'<label>Endereço (opcional)</label><input id="ccEnd" autocomplete="off"><label>Bairro (opcional)</label><input id="ccBairro" autocomplete="off">'
+    +'<div class="min" style="text-align:left;margin-top:8px">É o mesmo cadastro do Industrial: o cliente já fica lá, com número próprio.</div>'
+    +'<div class="px2"><button class="btn ok" id="ccOk">✅ Cadastrar</button><button class="btn sec" id="ccNao">Cancelar</button></div></div>';
+  document.body.appendChild(ov);
+  const fim=()=>{ document.removeEventListener('keydown',kd,true); ov.remove(); };
+  const kd=e=>{ if(e.key==='Escape'){ e.preventDefault(); e.stopImmediatePropagation(); fim(); } };
+  document.addEventListener('keydown',kd,true);
+  $('#ccNao').onclick=fim; setTimeout(()=>{ const i=$('#ccNome'); if(i){ i.focus(); } },50);
+  let busy=false;
+  $('#ccOk').onclick=async()=>{
+    if(busy) return; const nome=nomeProprio($('#ccNome').value); if(!nome){ erro('Falta o nome','Digite o nome do cliente.'); return; }
+    const tel=$('#ccTel').value.trim(), telDig=tel.replace(/\D/g,''), doc=$('#ccDoc').value.replace(/\D/g,'');
+    if(doc && doc.length!==11 && doc.length!==14){ erro('CPF/CNPJ incompleto','CPF tem 11 números e CNPJ tem 14. Confira ou deixe em branco.'); return; }
+    const par=vkClientes.find(c=>norm(c.nome)===norm(nome) || (telDig.length>=8 && String(c.telefone||'').replace(/\D/g,'')===telDig) || (doc && String(c.documento||'').replace(/\D/g,'')===doc));
+    if(par){ if(!(await confirmar('Possível cliente repetido','Já existe um cliente com nome, telefone ou documento igual: "'+par.nome+'"'+(par.numeroCliente?' (Nº '+par.numeroCliente+')':'')+'.\nSe é a mesma pessoa, cancele e use a busca. Cadastrar mesmo assim?','Cadastrar mesmo assim','Voltar'))) return; }
+    busy=true; $('#ccOk').disabled=true; $('#ccOk').textContent='Salvando…';
+    try{
+      const vdb=await vkDb(), numero=await gerarNumeroCliente(vdb), end=$('#ccEnd').value.trim(), bairro=$('#ccBairro').value.trim();
+      const cli={ id:'cli_'+uuid().replace(/-/g,'').slice(0,18), nome, numeroCliente:numero, criadoEm:new Date().toISOString(), contato:'', telefone:tel, email:'', documento:doc, endereco:end, bairro, enderecos:(end||bairro)?[{rotulo:'Principal',endereco:end,bairro}]:[], representanteId:repSel||null, observacoes:'Cadastrado no Caixa VK por '+(usuario.email||''), origemCadastro:'caixa-vk' };
+      await vdb.collection('clientes').doc(cli.id).set(cli);
+      vkClientes.push(cli); fim(); await selecionarCliente(cli);
+      await aviso({titulo:'✔ Cliente cadastrado',tipo:'ok',texto:nome+'\nCliente Nº '+numero+' no Industrial.'});
+    }catch(e){ busy=false; const b=$('#ccOk'); if(b){ b.disabled=false; b.textContent='✅ Cadastrar'; } await erro('O cliente NÃO foi cadastrado',(e&&e.message?e.message:String(e))+'\nConfira a internet e tente de novo.'); }
+  };
+}
+function addProd(id){ const p=vkProdutos.find(x=>x.id===id); if(!p) return; const ex=carrinho.find(i=>i.produtoId===id); if(ex) ex.quantidade=r2(ex.quantidade+1); else carrinho.push({produtoId:p.id,produto:p.nome,unidade:p.unidade||'un',quantidade:1,valorUnitario:precoDe(p),promocao:fotoPromo(p)}); desenharCarrinho(); }
 function desenharCarrinho(){
   const w=$('#vCart'); if(!w) return;
-  w.innerHTML = carrinho.length ? carrinho.map((i,ix)=>'<div class="cart"><div class="tx">'+esc(i.produto)+'<small>'+brl(i.valorUnitario)+' / '+esc(i.unidade)+' · <b>'+brl(r2(i.quantidade*i.valorUnitario))+'</b></small></div><div class="qtd"><button data-m="'+ix+'">−</button><input data-q="'+ix+'" inputmode="decimal" value="'+String(i.quantidade).replace('.',',')+'"><button data-p="'+ix+'">+</button></div></div>').join('') : '<div class="vazio">Toque nos produtos abaixo para adicionar.</div>';
+  w.innerHTML = carrinho.length ? carrinho.map((i,ix)=>'<div class="cart"><div class="tx">'+esc(i.produto)+'<small>'+(i.promocao?'🔥 <s>'+brl(i.promocao.precoOriginal)+'</s> ':'')+brl(i.valorUnitario)+' / '+esc(i.unidade)+' · <b>'+brl(r2(i.quantidade*i.valorUnitario))+'</b></small></div><div class="qtd"><button data-m="'+ix+'">−</button><input data-q="'+ix+'" inputmode="decimal" value="'+String(i.quantidade).replace('.',',')+'"><button data-p="'+ix+'">+</button></div></div>').join('') : '<div class="vazio">Toque nos produtos abaixo para adicionar.</div>';
   w.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const i=carrinho[+b.dataset.m]; i.quantidade=r2(i.quantidade-1); if(i.quantidade<=0) carrinho.splice(+b.dataset.m,1); desenharCarrinho(); });
   w.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ carrinho[+b.dataset.p].quantidade=r2(carrinho[+b.dataset.p].quantidade+1); desenharCarrinho(); });
   w.querySelectorAll('[data-q]').forEach(inp=>inp.onchange=()=>{ const v=num(inp.value); if(v>0) carrinho[+inp.dataset.q].quantidade=r2(v); else carrinho.splice(+inp.dataset.q,1); desenharCarrinho(); });
   atualizarTotalVenda();
   if(ehDesk()) marcarNoCarrinho();
 }
-function marcarNoCarrinho(){ document.querySelectorAll('#vProds tbody tr').forEach(tr=>{ const c=carrinho.find(i=>i.produtoId===tr.dataset.id); const td=tr.querySelector('.qt'); if(td) td.innerHTML=c?'<b>'+String(c.quantidade).replace('.',',')+'</b>':''; }); }
+function marcarNoCarrinho(){ marcarTiles(); document.querySelectorAll('#vProds tbody tr').forEach(tr=>{ const c=carrinho.find(i=>i.produtoId===tr.dataset.id); const td=tr.querySelector('.qt'); if(td) td.innerHTML=c?'<b>'+String(c.quantidade).replace('.',',')+'</b>':''; }); }
+function marcarTiles(){ document.querySelectorAll('#vProds .dk-tile').forEach(t=>{ const c=carrinho.find(i=>i.produtoId===t.dataset.id); const q=t.querySelector('.qb'); if(q) q.textContent=c?String(c.quantidade).replace('.',','):''; }); }
 function atualizarTotalVenda(){
-  const t=totalCarrinho(); const el=$('#vTotal'); if(el) el.textContent=brl(t);
+  const V=calcVenda(), t=V.total; const el=$('#vTotal'); if(el) el.textContent=brl(t);
+  const vd=$('#vDesc'); if(vd) vd.innerHTML=((V.desc>0||V.eco>0)?'Subtotal '+brl(V.sub)+(V.eco>0?' · 🔥 <b>Promoções: economia de '+brl(V.eco)+'</b>':'')+(V.desc>0?' · 🏷️ <b>Desconto '+esc(String(V.pct))+'%: − '+brl(V.desc)+'</b>':''):'')+(descOff&&cliSel&&descRegraAtiva(cliSel)?' <b class="bad">· desconto do cliente removido</b>':'');
   const rv=$('#vRec'), c=$('#vCalc'); if(!rv||!c) return; const v=num(rv.value);
   if(!(t>0)||!(v>0)){ c.className='calc'; c.textContent=''; return; }
   if(v>t+0.009){ c.className='calc troco'; c.textContent='Troco a devolver: '+brl(r2(v-t)); } else if(v<t-0.009){ c.className='calc falta'; c.textContent='Falta '+brl(r2(t-v))+' — o valor recebido não cobre o total'; } else { c.className='calc exato'; c.textContent='✔ Valor certo'; }
@@ -490,20 +614,21 @@ async function reservarNumeroPedido(vdb){
 async function concluirVenda(forma){
   forma = forma==='pix' ? 'pix' : 'dinheiro';
   if(salvando) return;
-  const total=totalCarrinho(); if(!carrinho.length||!(total>0)) return erro('Venda vazia','Escolha pelo menos um produto.');
+  const V=calcVenda(), total=V.total; if(!carrinho.length||!(V.sub>0)) return erro('Venda vazia','Escolha pelo menos um produto.');
+  if(cliSel&&cliSel.bloqueado && !(await confirmar('⛔ Cliente BLOQUEADO','+cliSel.nome+ está bloqueado no Industrial.\nContinuar a venda mesmo assim?','Continuar a venda','Voltar'))) return;
   let rec=num($('#vRec').value); if(!(rec>0)||forma==='pix') rec=total;
   if(forma==='pix' && !pixConfigurado()) return;
   if(rec<total-0.009) return erro('Valor recebido menor que o total','O cliente entregou '+brl(rec)+' e o total é '+brl(total)+'.');
   const troco=r2(rec-total);
   if(forma==='pix'){ if(pixVendaOk!==total){ if(!(await pixAbrir({valor:total,sub:'Venda direta · '+carrinho.reduce((s,i)=>s+Number(i.quantidade||0),0)+' item(ns)'+(repSel?' · '+((vkReps.find(r=>r.id===repSel)||{}).nome||''):'')}))) return; pixVendaOk=total; } }
-  else if(!(await confirmar('Concluir a venda?', (repSel?'Representante: '+((vkReps.find(r=>r.id===repSel)||{}).nome||'')+'\n':'')+carrinho.map(i=>i.quantidade+' × '+i.produto).join('\n')+'\n\nTotal: '+brl(total)+(troco>0?'\nRecebido: '+brl(rec)+' — devolver troco de '+brl(troco):''),'✅ Sim, concluir','Voltar'))) return;
+  else if(!(await confirmar('Concluir a venda?', (repSel?'Representante: '+((vkReps.find(r=>r.id===repSel)||{}).nome||'')+'\n':'')+carrinho.map(i=>i.quantidade+' × '+i.produto).join('\n')+(V.desc>0?'\n\nSubtotal: '+brl(V.sub)+'\nDesconto do cliente ('+V.pct+'%): − '+brl(V.desc):'')+'\n\nTotal: '+brl(total)+(troco>0?'\nRecebido: '+brl(rec)+' — devolver troco de '+brl(troco):''),'✅ Sim, concluir','Voltar'))) return;
   salvando=true; const b=$('#vOk'); if(b){ b.disabled=true; b.textContent='Salvando…'; }
   try{
     const vdb=await vkDb(); const numero=await reservarNumeroPedido(vdb);
     const agora=new Date().toISOString(), dia=hoje(), pid='ped_'+uuid().replace(/-/g,'').slice(0,18);
-    const itens=carrinho.map(i=>({produto:i.produto,quantidade:i.quantidade,valorUnitario:i.valorUnitario,cor:'padrao'}));
-    const ped={ id:pid, numero, clienteId:null, representanteId:repSel||'', data:dia, criadoEm:agora, dataEntrega:dia, dataFabricacaoNecessaria:'', dataDespacho:dia, itens, subtotal:total, desconto:0, valorTotal:total,
-      observacoes:'Venda direta no Caixa VK', bonificacao:false, enderecoEntrega:'', bairroEntrega:'', status:'entregue', vendaDireta:true, pagamentoRealizado:true, origem:'caixa-vk', origemApp:'caixa-vk', aprovacao:{estado:'nao_exigida'},
+    const itens=carrinho.map(i=>({produto:i.produto,quantidade:i.quantidade,valorUnitario:i.valorUnitario,cor:'padrao',...(i.promocao?{promocao:i.promocao}:{})}));
+    const ped={ id:pid, numero, clienteId:cliSel?cliSel.id:null, representanteId:repSel||'', data:dia, criadoEm:agora, dataEntrega:dia, dataFabricacaoNecessaria:'', dataDespacho:dia, itens, subtotal:V.sub, desconto:V.desc, valorTotal:total,
+      observacoes:'Venda direta no Caixa VK', bonificacao:false, enderecoEntrega:'', bairroEntrega:'', status:'entregue', vendaDireta:true, pagamentoRealizado:true, origem:'caixa-vk', origemApp:'caixa-vk', aprovacao:{estado:'nao_exigida'}, ...(V.desc>0?{descontoOrigem:'cliente',descontoClienteRegraId:V.regra.id,descontoStatus:'aplicado'}:{}), ...(tabelaDe(cliSel)?{tabelaPrecoId:tabelaDe(cliSel).id,tabelaPrecoNome:tabelaDe(cliSel).nome}:{}),
       pdv:{forma,valorRecebido:rec,troco,operador:usuario.email||'',hora:agora,origem:'caixa-vk'},
       integracaoLivroCaixa:{tipo:'venda_direta',valor:total,pago:true,data:dia,forma,caixaFisico:forma==='dinheiro'} };
     await vdb.collection('pedidos').doc(pid).set(ped);
@@ -511,8 +636,8 @@ async function concluirVenda(forma){
     for(const it of carrinho){ const pr=vkProdutos.find(x=>x.id===it.produtoId); if(pr && pr.tipo==='revenda'){ try{ await vdb.collection('despesas_revenda').doc('desp_'+uuid().replace(/-/g,'').slice(0,18)).set({ produtoId:pr.id, produtoNome:pr.nome, quantidade:it.quantidade, custoUnitario:pr.custoCompra||0, custoTotal:r2(it.quantidade*(pr.custoCompra||0)), pedidoId:pid, pedidoNumero:numero, data:dia, criadoEm:agora }); }catch(e){ console.error('despesa revenda',e); } } }
     // avisa o Livro Caixa (entra no Caixa físico como venda direta)
     const id=uuid();
-    db.collection('caixa_app_recebimentos').doc(id).set({ id, kind:'vk', refId:'', vkPedidoId:pid, cliente:'Venda Direta', numero:String(numero), descricao:'Pedido N° '+numero+' — Venda Direta', vencimento:dia, valor:total, valorEntregue:r2(rec), troco, forma, data:dia, status:'novo', vendaDireta:true, valorTotal:total, vendedorId:repSel||'', vendedorNome:(vkReps.find(r=>r.id===repSel)||{}).nome||'', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() }).catch(e=>erro('Não consegui avisar o Livro Caixa','A venda ficou salva no Industrial (pedido N° '+numero+'). Motivo: '+(e.message||e)));
-    salvando=false; pixVendaOk=0; delete $('#app').dataset.tela; carrinho=[]; repSel=''; if($('#vRec')) $('#vRec').value=''; if($('#vRep')) $('#vRep').value=''; desenhar(); desenharCarrinho();
+    db.collection('caixa_app_recebimentos').doc(id).set({ id, kind:'vk', refId:'', vkPedidoId:pid, cliente:(cliSel?cliSel.nome:'Venda Direta'), numero:String(numero), descricao:'Pedido N° '+numero+' — '+(cliSel?cliSel.nome:'Venda Direta'), vencimento:dia, valor:total, valorEntregue:r2(rec), troco, forma, data:dia, status:'novo', vendaDireta:true, valorTotal:total, vendedorId:repSel||'', vendedorNome:(vkReps.find(r=>r.id===repSel)||{}).nome||'', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() }).catch(e=>erro('Não consegui avisar o Livro Caixa','A venda ficou salva no Industrial (pedido N° '+numero+'). Motivo: '+(e.message||e)));
+    salvando=false; pixVendaOk=0; delete $('#app').dataset.tela; carrinho=[]; repSel=''; cliSel=null; cliUsos=0; descOff=false; if($('#vRec')) $('#vRec').value=''; if($('#vRep')) $('#vRep').value=''; desenhar(); desenharCliente(); desenharCarrinho();
     await aviso({titulo:'✔ Venda '+numero+' concluída',tipo:'ok',texto:brl(total)+(forma==='pix'?' recebidos no Pix.':(troco>0?'\nDevolva '+brl(troco)+' de troco.':''))+'\nO pedido já está no Industrial como venda direta. O Livro Caixa lança '+(forma==='pix'?'na conta '+((conf.pix&&conf.pix.contaNome)||'do Pix'):'no Caixa físico')+' quando for aberto.'});
   }catch(e){
     salvando=false; const bb=$('#vOk'); if(bb){ bb.disabled=false; bb.textContent='✅ Concluir venda'; }
@@ -523,27 +648,81 @@ function telaVenda(A){
   if(A.querySelector('#vCart')){ return; }
   const q=norm(buscaProd);
   A.innerHTML='<div class="topo"><button class="sair" id="bVoltarV">← Voltar</button><div class="tx"><h1 style="font-size:20px">Venda direta</h1></div></div><div class="vgrid">'
-   +'<div class="card vcart"><div class="sub">Itens da venda</div><div id="vCart"></div><div style="margin-top:12px;font-size:14px;color:var(--soft)">Total</div><div id="vTotal" style="font-size:34px;font-weight:800;font-family:ui-monospace,Menlo,Consolas,monospace">R$ 0,00</div>'
+   +'<div class="card vcart"><div class="sub">Itens da venda</div><div id="vCart"></div><div style="margin-top:12px;font-size:14px;color:var(--soft)">Total</div><div id="vTotal" style="font-size:34px;font-weight:800;font-family:ui-monospace,Menlo,Consolas,monospace">R$ 0,00</div><div id="vDesc" class="vdesc"></div>'
+   +'<label>Cliente (opcional)</label><div id="vCliBox"></div>'
    +'<label>Representante (opcional)</label><select id="vRep"><option value="">— nenhum —</option>'+vkReps.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===repSel?' selected':'')+'>'+esc(r.nome)+'</option>').join('')+'</select>'
    +'<label>Quanto o cliente entregou (R$)</label><div class="pre"><b>R$</b><input id="vRec" inputmode="decimal" placeholder="valor certo"></div><div id="vCalc" class="calc"></div>'
    +'<button class="btn ok" id="vOk">✅ Concluir venda (dinheiro)</button><button class="btn pix" id="vPix">💠 Concluir no Pix</button><div class="atalhos"><kbd>Enter</kbd> no valor recebido ou <kbd>F9</kbd> conclui · <kbd>Esc</kbd> volta</div></div>'
    +'<div class="card vprods" style="padding-top:6px"><label>Produtos</label><input id="vBusca" type="search" placeholder="Procurar produto…" autocomplete="off"><div id="vProds" style="margin-top:10px"></div></div></div>';
   $('#bVoltarV').onclick=fecharVenda; $('#vOk').onclick=concluirVenda; $('#vPix').onclick=()=>concluirVenda('pix'); $('#vRep').onchange=e=>{ repSel=e.target.value; }; $('#vRec').oninput=atualizarTotalVenda; $('#vBusca').oninput=e=>{ buscaProd=e.target.value; listarProds(); };
-  desenharCarrinho(); listarProds();
+  desenharCliente(); desenharCarrinho(); listarProds();
   if(window.matchMedia('(min-width:980px)').matches) setTimeout(()=>{ const i=$('#vBusca'); if(i) i.focus(); },50);
 }
 // inicial de cada palavra do nome (até 2; palavras de 1-2 letras como "e", "de" são ignoradas): "Cuca recheada" -> CR, "Água e sal" -> AS, "Rosquinha" -> R
 function inicial(n){ const w=String(n||'').trim().split(/\s+/).filter(x=>x.length>2); const l=(w.length?w:String(n||'?').trim().split(/\s+/)).slice(0,2).map(x=>x.charAt(0)); return l.join('').toUpperCase()||'?'; }
+
+/* ===== Grupos de produtos da tela de venda (desktop): configuráveis ===== */
+function gruposAtuais(){
+  const base=(vendaCfg&&vendaCfg.grupos.length)?vendaCfg.grupos:(vkSeletor.length?vkSeletor:vkCats.map((c,i)=>({id:c.id,nome:c.nome,cor:CORES_G[i%8],produtos:vkProdutos.filter(p=>p.categoriaId===c.id).map(p=>p.id)})));
+  return base.map((g,i)=>({id:g.id||('g'+i),nome:g.nome||'Grupo',cor:g.cor||CORES_G[i%8],produtos:(g.produtos||[]).filter(id=>vkProdutos.some(p=>p.id===id))})).filter(g=>g.produtos.length);
+}
+function grpAtual(gs){ if(grpSel==='*') return '*'; return gs.find(g=>g.id===grpSel)?grpSel:(gs[0]?gs[0].id:'*'); }
+function orgAbrir(){
+  if(!vkProdutos.length){ erro('Produtos ainda não carregaram','Espere os produtos aparecerem na Venda direta e abra de novo.'); return; }
+  const gs=(vendaCfg&&vendaCfg.grupos.length)?vendaCfg.grupos:gruposAtuais();
+  orgD=JSON.parse(JSON.stringify(gs)); orgG=0; orgQ=''; deskCfg(false); orgDesenhar(); $('#dkOrg').classList.add('on');
+}
+function orgFechar(){ const o=$('#dkOrg'); if(o) o.classList.remove('on'); orgD=null; }
+function orgDesenhar(){
+  const w=$('#orgCorpo'); if(!w||!orgD) return; const g=orgD[orgG]; const q=norm(orgQ);
+  const lista=orgD.map((x,i)=>'<div class="og'+(i===orgG?' on':'')+'" data-g="'+i+'" style="--gc:'+(x.cor||CORES_G[i%8])+'"><span class="og-n">'+esc(x.nome||'(sem nome)')+' <small>'+x.produtos.length+'</small></span><span class="og-b"><button data-gu="'+i+'" title="Subir">↑</button><button data-gd="'+i+'" title="Descer">↓</button><button data-gx="'+i+'" title="Apagar grupo">✕</button></span></div>').join('');
+  let dir='<div class="min" style="text-align:left">Crie um grupo para começar.</div>';
+  if(g){
+    const marc=g.produtos.map(id=>vkProdutos.find(p=>p.id===id)).filter(Boolean);
+    const outros=vkProdutos.filter(p=>!g.produtos.includes(p.id) && (!q||norm(p.nome).includes(q)));
+    dir='<label style="margin-top:0">Nome do grupo</label><input id="orgNome" value="'+esc(g.nome||'')+'" maxlength="30">'
+      +'<label>Cor</label><div class="org-cores">'+CORES_G.map(c=>'<button data-cor="'+c+'" class="'+((g.cor||CORES_G[orgG%8])===c?'on':'')+'" style="background:'+c+'"></button>').join('')+'</div>'
+      +'<label>Produtos que aparecem neste grupo ('+marc.length+') — na ordem da tela</label><div class="org-sel">'+(marc.length?marc.map((p,i)=>'<div class="op"><span>'+esc(p.nome)+'</span><span><button data-pu="'+i+'">↑</button><button data-pd="'+i+'">↓</button><button data-px="'+esc(p.id)+'">✕</button></span></div>').join(''):'<div class="min" style="text-align:left">Nenhum produto. Marque abaixo.</div>')+'</div>'
+      +'<label>Adicionar produto</label><input id="orgBusca" type="search" placeholder="🔎 Procurar produto…" value="'+esc(orgQ)+'"><div class="org-add">'+outros.slice(0,60).map(p=>'<button data-pa="'+esc(p.id)+'">＋ '+esc(p.nome)+'</button>').join('')+'</div>';
+  }
+  w.innerHTML='<div class="org-esq"><div class="org-gl">'+lista+'</div><button class="sair" id="orgNovo">➕ Novo grupo</button>'+(vkSeletor.length?'<button class="sair" id="orgInd">📥 Copiar grupos do Industrial</button>':'')+'<button class="sair" id="orgPad">↩ Voltar ao padrão</button></div><div class="org-dir">'+dir+'</div>';
+  w.querySelectorAll('[data-g]').forEach(b=>b.onclick=e=>{ if(e.target.closest('button')) return; orgG=+b.dataset.g; orgQ=''; orgDesenhar(); });
+  w.querySelectorAll('[data-gu]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.gu; if(i>0){ [orgD[i-1],orgD[i]]=[orgD[i],orgD[i-1]]; orgG=i-1; orgDesenhar(); } });
+  w.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.gd; if(i<orgD.length-1){ [orgD[i+1],orgD[i]]=[orgD[i],orgD[i+1]]; orgG=i+1; orgDesenhar(); } });
+  w.querySelectorAll('[data-gx]').forEach(b=>b.onclick=async()=>{ const i=+b.dataset.gx; if(await confirmar('Apagar o grupo "'+(orgD[i].nome||'')+'"?','Só o grupo some da tela. Os produtos continuam no Industrial.','Apagar grupo')){ orgD.splice(i,1); orgG=Math.max(0,Math.min(orgG,orgD.length-1)); orgDesenhar(); } });
+  $('#orgNovo').onclick=()=>{ orgD.push({id:'g'+Date.now().toString(36),nome:'Novo grupo',cor:CORES_G[orgD.length%8],produtos:[]}); orgG=orgD.length-1; orgDesenhar(); const n=$('#orgNome'); if(n){ n.focus(); n.select(); } };
+  const bi=$('#orgInd'); if(bi) bi.onclick=async()=>{ if(await confirmar('Copiar os grupos do Industrial?','Troca a lista atual pelos grupos que existem no seletor do Industrial. Depois você ainda pode ajustar.','Copiar')){ orgD=JSON.parse(JSON.stringify(vkSeletor)); orgG=0; orgDesenhar(); } };
+  $('#orgPad').onclick=async()=>{ if(await confirmar('Voltar ao padrão?','Apaga a sua organização e volta a usar os grupos do Industrial (ou as categorias, se o Industrial não tiver grupos).','Voltar ao padrão')){ orgD=[]; orgG=0; orgDesenhar(); } };
+  if(g){
+    $('#orgNome').oninput=e=>{ g.nome=e.target.value; const n=w.querySelector('.og.on .og-n'); if(n) n.firstChild.textContent=(g.nome||'(sem nome)')+' '; };
+    w.querySelectorAll('[data-cor]').forEach(b=>b.onclick=()=>{ g.cor=b.dataset.cor; orgDesenhar(); });
+    w.querySelectorAll('[data-pu]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.pu; if(i>0){ [g.produtos[i-1],g.produtos[i]]=[g.produtos[i],g.produtos[i-1]]; orgDesenhar(); } });
+    w.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.pd; if(i<g.produtos.length-1){ [g.produtos[i+1],g.produtos[i]]=[g.produtos[i],g.produtos[i+1]]; orgDesenhar(); } });
+    w.querySelectorAll('[data-px]').forEach(b=>b.onclick=()=>{ g.produtos=g.produtos.filter(id=>id!==b.dataset.px); orgDesenhar(); });
+    w.querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>{ g.produtos.push(b.dataset.pa); orgDesenhar(); });
+    $('#orgBusca').oninput=e=>{ orgQ=e.target.value; const pos=e.target.selectionStart; orgDesenhar(); const n=$('#orgBusca'); n.focus(); n.setSelectionRange(pos,pos); };
+  }
+}
+async function orgSalvar(){
+  if(!orgD) return;
+  const lim=orgD.filter(g=>(g.nome||'').trim()).map(g=>({id:g.id,nome:g.nome.trim(),cor:g.cor||'#3B6FE0',produtos:g.produtos}));
+  vendaCfg=lim.length?{grupos:lim}:null; grpSel='';
+  try{ if(vendaCfg) localStorage.setItem('caixa_vendacfg',JSON.stringify(vendaCfg)); else localStorage.removeItem('caixa_vendacfg'); }catch(e){}
+  orgFechar(); deskVendaDados();
+  let ok=true; try{ await db.collection('caixa_app_config').doc('vendaTela').set({grupos:lim,atualizadoEm:new Date().toISOString(),por:(usuario&&usuario.email)||''}); }catch(e){ ok=false; console.error('salvar vendaTela',e); }
+  if(!ok) await aviso({titulo:'Salvo só neste computador',texto:'A organização dos produtos foi salva aqui, mas não consegui enviar para os outros computadores (sem permissão ou sem internet). Neste computador já está valendo.',botoes:[{t:'Entendi',v:true}]});
+}
 function listarProds(){
   const w=$('#vProds'); if(!w) return; const q=norm(buscaProd), dk=ehDesk();
   const l=vkProdutos.filter(p=>(!q||norm(p.nome).includes(q)) && (!vkCatSel||p.categoriaId===vkCatSel)).slice(0,300);
   if(dk){
-    const catNome=id=>(vkCats.find(c=>c.id===id)||{}).nome||'';
-    w.innerHTML=l.length? '<table class="dk-tb"><thead><tr><th>Produto</th><th>Categoria</th><th>Un.</th><th style="text-align:right">Preço</th><th style="text-align:center">No carrinho</th><th></th></tr></thead><tbody>'
-      +l.map((p,ix)=>{ const c=carrinho.find(i=>i.produtoId===p.id); return '<tr data-id="'+esc(p.id)+'"'+(ix===0&&buscaProd?' class="alvo"':'')+'><td class="nm">'+esc(p.nome)+'</td><td class="cat">'+esc(catNome(p.categoriaId))+'</td><td class="un">'+esc(p.unidade||'un')+'</td><td class="pr">'+brl(p.valorPadrao)+'</td><td class="qt">'+(c?'<b>'+String(c.quantidade).replace('.',',')+'</b>':'')+'</td><td class="ad"><span>+</span></td></tr>'; }).join('')+'</tbody></table>'
-      : '<div class="vazio">Nenhum produto com esse nome.</div>';
+    const gs=gruposAtuais(), cur=grpAtual(gs), g0=gs.find(g=>g.id===cur);
+    let ld; if(q) ld=vkProdutos.filter(p=>norm(p.nome).includes(q)).slice(0,300); else if(g0) ld=g0.produtos.map(id=>vkProdutos.find(p=>p.id===id)).filter(Boolean); else ld=vkProdutos.slice(0,400);
+    const corDe=p=>{ if(g0&&!q) return g0.cor; const g=gs.find(x=>x.produtos.includes(p.id)); return g?g.cor:'#8A94A6'; };
+    w.innerHTML=ld.length? '<div class="dk-tiles">'+ld.map((p,ix)=>{ const c=carrinho.find(i=>i.produtoId===p.id), pr=promoDe(p); return '<button class="dk-tile'+(ix===0&&buscaProd?' alvo':'')+'" data-id="'+esc(p.id)+'" style="--gc:'+corDe(p)+'"><span class="qb">'+(c?String(c.quantidade).replace('.',','):'')+'</span><b class="nm">'+esc(p.nome)+'</b><span class="pr">'+(pr?'🔥 ':'')+brl(precoDe(p))+'<small> /'+esc(p.unidade||'un')+'</small></span></button>'; }).join('')+'</div>'
+      : '<div class="vazio">'+(q?'Nenhum produto com esse nome.':'Nenhum produto neste grupo. Use ⚙️ Configurar → Organizar produtos.')+'</div>';
   }
-  else w.innerHTML=l.length? l.map(p=>'<button class="prod" data-id="'+esc(p.id)+'"><span>'+esc(p.nome)+'<br><small>'+esc(p.unidade||'un')+'</small></span><b>'+brl(p.valorPadrao)+'</b></button>').join('') : '<div class="vazio">Nenhum produto com esse nome.</div>';
+  else w.innerHTML=l.length? l.map(p=>'<button class="prod" data-id="'+esc(p.id)+'"><span>'+esc(p.nome)+'<br><small>'+esc(p.unidade||'un')+'</small></span><b>'+(promoDe(p)?'🔥 ':'')+brl(precoDe(p))+'</b></button>').join('') : '<div class="vazio">Nenhum produto com esse nome.</div>';
   w.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>addProd(b.dataset.id));
 }
 
@@ -565,8 +744,9 @@ function montarDesk(A){
    +'<span class="dk-live" id="dkLive">Caixa aberto</span>'
    +'<div class="dk-op"><div>Operador<b>'+esc((usuario.email||'').split('@')[0])+'</b></div><button class="sair" id="bSair">Sair</button></div></div></header><div class="dk-corpo" id="dkCorpo"></div>'
    +'<div class="dk-ov" id="dkOv"><div class="dk-mod"><div class="dk-mod-cab"><span>📒 Caixa de hoje</span><button class="sair" id="bFecharHist">Fechar (Esc)</button></div><div class="dk-mod-cor" id="dkHistCor"></div></div></div>'
-   +'<div class="dk-ov" id="dkCfg"><div class="dk-mod" style="width:min(520px,92vw)"><div class="dk-mod-cab"><span>⚙️ Configurar</span><button class="sair" id="bFecharCfg">Fechar (Esc)</button></div><div class="dk-mod-cor"><label style="margin-top:0">Mostrar pedidos dos últimos (dias)</label><input id="cfgDias" type="number" min="1" max="365" inputmode="numeric" value="'+diasMax+'" style="font-size:22px;min-height:52px"><div class="min" style="text-align:left;margin:8px 0 14px">Ao pesquisar um cliente, só aparecem os pedidos dele feitos neste período. Pedidos mais antigos ficam escondidos. Vale só neste computador.</div><button class="btn ok" id="bSalvarCfg">Salvar</button></div></div></div>';
-  $('#bCfg').onclick=()=>deskCfg(true); $('#bFecharCfg').onclick=()=>deskCfg(false); $('#dkCfg').onclick=e=>{ if(e.target.id==='dkCfg') deskCfg(false); }; $('#bSalvarCfg').onclick=salvarCfg; $('#bHist').onclick=()=>deskHist(true); $('#bFecharHist').onclick=()=>deskHist(false); $('#dkOv').onclick=e=>{ if(e.target.id==='dkOv') deskHist(false); }; $('#bTema').onclick=()=>aplicarTema(document.documentElement.dataset.tema==='escuro'?'claro':'escuro'); aplicarTema(document.documentElement.dataset.tema);
+   +'<div class="dk-ov" id="dkCfg"><div class="dk-mod" style="width:min(520px,92vw)"><div class="dk-mod-cab"><span>⚙️ Configurar</span><button class="sair" id="bFecharCfg">Fechar (Esc)</button></div><div class="dk-mod-cor"><label style="margin-top:0">Mostrar pedidos dos últimos (dias)</label><input id="cfgDias" type="number" min="1" max="365" inputmode="numeric" value="'+diasMax+'" style="font-size:22px;min-height:52px"><div class="min" style="text-align:left;margin:8px 0 14px">Ao pesquisar um cliente, só aparecem os pedidos dele feitos neste período. Pedidos mais antigos ficam escondidos. Vale só neste computador.</div><button class="btn ok" id="bSalvarCfg">Salvar</button><button class="btn sec" id="bOrg" style="margin-top:10px">🧩 Organizar produtos da tela de venda</button></div></div></div>'
+   +'<div class="dk-ov" id="dkOrg"><div class="dk-mod" style="width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column"><div class="dk-mod-cab"><span>🧩 Organizar produtos da venda</span><button class="sair" id="orgFecha">Cancelar (Esc)</button></div><div class="dk-mod-cor" id="orgCorpo" style="overflow:hidden;flex:1;min-height:0"></div><div style="padding:10px 18px 16px"><button class="btn ok" id="orgOk">✅ Salvar organização</button></div></div></div>';
+  $('#bCfg').onclick=()=>deskCfg(true); $('#bFecharCfg').onclick=()=>deskCfg(false); $('#dkCfg').onclick=e=>{ if(e.target.id==='dkCfg') deskCfg(false); }; $('#bSalvarCfg').onclick=salvarCfg; $('#bOrg').onclick=orgAbrir; $('#orgFecha').onclick=orgFechar; $('#orgOk').onclick=orgSalvar; $('#bHist').onclick=()=>deskHist(true); $('#bFecharHist').onclick=()=>deskHist(false); $('#dkOv').onclick=e=>{ if(e.target.id==='dkOv') deskHist(false); }; $('#bTema').onclick=()=>aplicarTema(document.documentElement.dataset.tema==='escuro'?'claro':'escuro'); aplicarTema(document.documentElement.dataset.tema);
   $('#tReceber').onclick=()=>setModo('receber'); $('#tVenda').onclick=()=>setModo('venda'); $('#bSair').onclick=sair; relogio();
   if(modo==='venda') montarDeskVenda(); else montarDeskReceber();
 }
@@ -671,22 +851,22 @@ function deskLado(){
 }
 function montarDeskVenda(){
   $('#dkCorpo').innerHTML='<section class="dk-esq"><input id="vBusca" class="dk-busca" type="search" placeholder="🔎 Procurar produto…  ( / )  ·  Enter adiciona o primeiro" autocomplete="off"><div class="dk-abas" id="vAbas"></div><div class="dk-grade" id="vProds"></div></section>'
-   +'<aside class="dk-lado"><div class="dk-lado-cab"><span>🛒 Venda atual</span><button class="sair" id="bLimpar">Limpar</button></div><div class="dk-itens" id="vCart"></div>'
+   +'<aside class="dk-lado"><div class="dk-lado-cab"><span>🛒 Venda atual</span><button class="sair" id="bLimpar">Limpar</button></div><div class="dk-cli" id="vCliBox"></div><div class="dk-itens" id="vCart"></div>'
    +'<div class="dk-rod"><label style="margin-top:0">Representante (opcional)</label><select id="vRep"></select>'
-   +'<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px"><span class="dk-tot-rot">Total da venda</span><span class="dk-tot" id="vTotal">R$ 0,00</span></div>'
+   +'<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px"><span class="dk-tot-rot">Total da venda</span><span class="dk-tot" id="vTotal">R$ 0,00</span></div><div id="vDesc" class="vdesc"></div>'
    +'<label>Quanto o cliente entregou</label><div class="pre"><b>R$</b><input id="vRec" inputmode="decimal" placeholder="valor certo"></div>'
    +'<div class="chips"><button data-t="1">Valor certo</button><button data-v="20">R$ 20</button><button data-v="50">R$ 50</button><button data-v="100">R$ 100</button></div><div id="vCalc" class="calc"></div>'
    +'<div class="dk-2b"><button class="btn ok" id="vOk">✅ Dinheiro (F9)</button><button class="btn pix" id="vPix">💠 Pix (F4)</button></div></div></aside>';
   $('#vBusca').oninput=e=>{ buscaProd=e.target.value; listarProds(); };
   $('#vRep').onchange=e=>{ repSel=e.target.value; }; $('#vOk').onclick=concluirVenda; $('#vPix').onclick=()=>concluirVenda('pix'); $('#vRec').oninput=atualizarTotalVenda;
   $('#bLimpar').onclick=()=>{ carrinho=[]; desenharCarrinho(); };
-  document.querySelectorAll('.dk-rod .chips button').forEach(b=>b.onclick=()=>{ const v=b.dataset.t?totalCarrinho():Number(b.dataset.v); $('#vRec').value=v>0?String(v.toFixed(2)).replace('.',','):''; atualizarTotalVenda(); });
-  desenharCarrinho(); deskVendaDados(); $('#vBusca').focus();
+  document.querySelectorAll('.dk-rod .chips button').forEach(b=>b.onclick=()=>{ const v=b.dataset.t?calcVenda().total:Number(b.dataset.v); $('#vRec').value=v>0?String(v.toFixed(2)).replace('.',','):''; atualizarTotalVenda(); });
+  desenharCliente(); desenharCarrinho(); deskVendaDados(); $('#vBusca').focus();
 }
 function deskVendaDados(){
   const g=$('#vProds'); if(!g) return;
   const pronto=()=>{ const sr=$('#vRep'); if(sr) sr.innerHTML='<option value="">— nenhum —</option>'+vkReps.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===repSel?' selected':'')+'>'+esc(r.nome)+'</option>').join('');
-    const ab=$('#vAbas'); if(ab){ ab.innerHTML=vkCats.length?'<button class="dk-aba'+(!vkCatSel?' on':'')+'" data-c="">Todos</button>'+vkCats.filter(c=>vkProdutos.some(p=>p.categoriaId===c.id)).map(c=>'<button class="dk-aba'+(vkCatSel===c.id?' on':'')+'" data-c="'+esc(c.id)+'">'+esc(c.nome)+'</button>').join(''):''; ab.querySelectorAll('.dk-aba').forEach(b=>b.onclick=()=>{ vkCatSel=b.dataset.c; pronto(); }); }
+    const ab=$('#vAbas'); if(ab){ const gs=gruposAtuais(), cur=grpAtual(gs); ab.innerHTML=gs.map(g=>'<button class="dk-aba g'+(cur===g.id?' on':'')+'" style="--gc:'+g.cor+'" data-c="'+esc(g.id)+'">'+esc(g.nome)+'</button>').join('')+'<button class="dk-aba'+(cur==='*'?' on':'')+'" data-c="*">Todos</button>'; ab.querySelectorAll('.dk-aba').forEach(b=>b.onclick=()=>{ grpSel=b.dataset.c; pronto(); }); }
     listarProds(); };
   if(vkProdutos.length){ pronto(); return; }
   g.innerHTML='<div class="vazio" style="grid-column:1/-1">⏳ Carregando produtos do Industrial…</div>';
@@ -705,6 +885,7 @@ document.addEventListener('keydown',e=>{
     else if(e.key==='Escape' && bs.length){ e.preventDefault(); bs[bs.length-1].click(); }
     return;
   }
+  const ovo=$('#dkOrg'); if(ovo&&ovo.classList.contains('on')){ if(e.key==='Escape'&&!$('#modal').classList.contains('on')){ e.preventDefault(); orgFechar(); } return; }
   const ovc=$('#dkCfg'); if(ovc&&ovc.classList.contains('on')){ if(e.key==='Escape'){ e.preventDefault(); deskCfg(false); } else if(e.key==='Enter'){ e.preventDefault(); salvarCfg(); } return; }
   const ovh=$('#dkOv'); if(ovh&&ovh.classList.contains('on')){ if(e.key==='Escape'){ e.preventDefault(); deskHist(false); } return; }
   const dk=ehDesk(), tela = dk ? (modo==='venda' ? 'venda' : (sel?'receber':'')) : ($('#app').dataset.tela||''), digitando=/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement||{}).tagName||'');

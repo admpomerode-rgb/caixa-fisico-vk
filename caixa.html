@@ -5,6 +5,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#14315C">
+<script>try{document.documentElement.dataset.tema=localStorage.getItem("caixa_tema")||"claro"}catch(e){document.documentElement.dataset.tema="claro"}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Caixa VK</title>
@@ -15,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F5F7FA;--card:#fff;--tx:#0B0F14;--soft:#5B6472;--bd:#E3E7EE;--ac:#3B6FE0;--ac2:#14315C;--ok:#1E9E6B;--warn:#D98F2B;--bad:#D5473F;--grad:linear-gradient(135deg,#1B2440 0%,#14315C 55%,#1F2E52 100%);--sombra:0 1px 2px rgba(11,15,20,.04),0 10px 28px -14px rgba(20,49,92,.16);--campo:#F5F7FA;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;--disp:'Space Grotesk','Inter',system-ui,sans-serif}
-@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#121b2e;--tx:#eaf0fb;--soft:#93a3bd;--bd:#223049;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;--sombra:0 10px 28px -14px rgba(0,0,0,.7);--campo:#0e1626}}
+html[data-tema=escuro]{--bg:#0b1220;--card:#121b2e;--tx:#eaf0fb;--soft:#93a3bd;--bd:#223049;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;--sombra:0 10px 28px -14px rgba(0,0,0,.7);--campo:#0e1626;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--tx);font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px}
 body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:var(--bg) radial-gradient(circle at 100% 0%,rgba(59,111,224,.06),transparent 45%) fixed}
@@ -73,6 +74,20 @@ body.desk{overflow:hidden}
 .dk-tabs{display:flex;gap:8px;margin-left:10px}.dk-tab{border:1px solid var(--bd);background:var(--campo);color:var(--tx);border-radius:999px;padding:11px 20px;font-weight:600;font-size:15.5px;cursor:pointer}.dk-tab.on{background:var(--ac);color:#fff;border-color:var(--ac);box-shadow:0 8px 18px -10px rgba(59,111,224,.8)}.dk-tab small{opacity:.7;margin-left:6px;font-weight:500}
 .dk-info{display:flex;gap:26px;margin-left:auto;align-items:center;font-size:11.5px;color:var(--soft);text-transform:uppercase;letter-spacing:.05em}.dk-info b{display:block;color:var(--tx);font-size:15px;text-transform:none;letter-spacing:0;font-weight:600}.dk-info .mono{font-family:var(--mono)}
 .dk-live{color:var(--ok);font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}.dk-live::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--ok)}
+/* barra de cima organizada + subtela "Caixa de hoje" */
+.dk-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px;padding:10px 24px;box-shadow:0 1px 0 var(--bd),0 6px 18px -12px rgba(11,15,20,.25)}
+.dk-tabs{margin-left:0;justify-self:start;background:var(--campo);border:1px solid var(--bd);border-radius:999px;padding:4px;gap:4px}
+.dk-tab{border:0;background:transparent;padding:10px 22px;white-space:nowrap}.dk-tab small{margin-left:8px;opacity:.6;font-weight:500}.dk-tab.on{box-shadow:0 4px 12px -4px rgba(59,111,224,.6)}
+.dk-dir{display:flex;align-items:center;gap:10px}
+.dk-chip{display:flex;flex-direction:column;justify-content:center;border:1px solid var(--bd);background:var(--campo);border-radius:12px;padding:6px 14px;font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;line-height:1.25;white-space:nowrap}.dk-chip b{font-size:14.5px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:600}
+.dk-btn{position:relative;display:flex;align-items:center;gap:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:12px;padding:0 16px;min-height:46px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:inherit;white-space:nowrap}.dk-btn:hover{border-color:var(--ac);color:var(--ac)}
+.dk-bad{display:none;background:var(--bad);color:#fff;border-radius:99px;font-size:12px;padding:1px 8px;margin-left:2px}.dk-bad.on{display:inline-block}
+.dk-op{display:flex;align-items:center;gap:10px;padding-left:12px;border-left:1px solid var(--bd);font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;line-height:1.25}.dk-op b{display:block;font-size:14.5px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:600}
+.dk-ov{position:fixed;inset:0;background:rgba(10,18,32,.55);display:none;align-items:center;justify-content:center;z-index:40}.dk-ov.on{display:flex}
+.dk-mod{background:var(--card);border:1px solid var(--bd);border-radius:20px;width:min(660px,92vw);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 30px 80px -20px rgba(0,0,0,.6)}
+.dk-mod-cab{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--bd);font-family:var(--disp);font-weight:700;font-size:19px}
+.dk-mod-cor{padding:18px 22px;overflow:auto}
+.dk-vazio{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:50px 30px;color:var(--soft);flex:1}.dk-vazio .big{font-size:52px}.dk-vazio b{color:var(--tx);font-size:18px}
 .dk-corpo{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 460px}
 .dk-esq{min-width:0;display:flex;flex-direction:column;min-height:0;padding:16px 22px 0}
 .dk-busca{font-size:19px;padding:14px 18px;border-radius:14px;min-height:58px;flex-shrink:0}
@@ -87,7 +102,7 @@ body.desk{overflow:hidden}
 .dk-tb .nm{font-weight:600}.dk-tb .un,.dk-tb .cat{color:var(--soft);font-size:14px}.dk-tb .pr{font-family:var(--mono);font-weight:600;text-align:right;white-space:nowrap}
 .dk-tb .qt{text-align:center;width:90px}.dk-tb .qt b{display:inline-block;min-width:34px;padding:3px 10px;border-radius:99px;background:var(--ok);color:#fff;font-size:14px}
 .dk-tb .ad{width:70px;text-align:center}.dk-tb .ad span{display:inline-flex;width:38px;height:38px;border-radius:50%;align-items:center;justify-content:center;background:var(--ac);color:#fff;font-size:22px;font-weight:600}
-@media (prefers-color-scheme:dark){.dk-tb th{background:#16223a}.dk-tb tbody tr:nth-child(even){background:#101a2e}.dk-tb tbody tr:hover{background:#1b2a47}.dk-tb tbody tr.alvo{background:#1d3157}}
+html[data-tema=escuro] .dk-tb th{background:#16223a}html[data-tema=escuro] .dk-tb tbody tr:nth-child(even){background:#101a2e}html[data-tema=escuro] .dk-tb tbody tr:hover{background:#1b2a47}html[data-tema=escuro] .dk-tb tbody tr.alvo{background:#1d3157}
 .dk-prod{display:flex;flex-direction:column;text-align:left;background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;padding:0;cursor:pointer;color:var(--tx);box-shadow:var(--sombra)}
 .dk-prod:hover{border-color:var(--ac);box-shadow:0 2px 6px rgba(11,15,20,.06),0 16px 36px -14px rgba(20,49,92,.28)}.dk-prod:active{transform:scale(.97)}
 .dk-prod .foto{height:78px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:30px;font-weight:700;color:#fff;background:linear-gradient(135deg,#3B6FE0,#14315C)}
@@ -149,7 +164,10 @@ function iniciar(){
 function assinar(){
   const falha = e=>console.error(e);
   unsubs.push(db.collection('caixa_app_pedidos').onSnapshot(s=>{ pedidos=s.docs.map(d=>({id:d.id,...d.data()})); desenhar(); },falha));
-  unsubs.push(db.collection('caixa_app_config').doc('geral').onSnapshot(s=>{ conf=s.exists?s.data():null; desenhar(); },falha));
+  unsubs.push(db.collection('caixa_app_config').doc('geral').onSnapshot(s=>{ conf=s.exists?s.data():null;
+    /* guarda o último acesso ao Industrial que funcionou; se o Livro Caixa publicar vazio por engano, o app continua funcionando */
+    try{ if(conf&&conf.vk&&conf.vk.firebaseConfig) localStorage.setItem('caixa_vkcfg',JSON.stringify(conf.vk)); else if(conf){ const g=JSON.parse(localStorage.getItem('caixa_vkcfg')||'null'); if(g) conf=Object.assign({},conf,{vk:g}); } }catch(e){}
+    desenhar(); },falha));
   unsubs.push(db.collection('caixa_app_recebimentos').where('uid','==',usuario.uid).onSnapshot(s=>{ meus=s.docs.map(d=>({id:d.id,pendente:d.metadata.hasPendingWrites,...d.data()})).sort((a,b)=>String(b.criadoEm||'').localeCompare(String(a.criadoEm||''))); desenhar(); },falha));
 }
 async function entrar(){
@@ -234,7 +252,7 @@ async function confirmarRecebimento(){
   meus.unshift({...doc,pendente:true}); desenhar();
   await aviso({titulo:'✔ Recebido!',tipo:'ok',texto: (offline?'Sem sinal agora. Ficou guardado no aparelho e vai sozinho quando o sinal voltar.\n':'') + brl(aplicado)+' de '+doc.cliente+(troco>0?'\nDevolva '+brl(troco)+' de troco.':'')+'\nO Livro Caixa lança no financeiro sozinho (conta Caixa físico) quando for aberto.'});
 }
-function voltar(){ sel=null; delete $('#app').dataset.tela; desenhar(); }
+function voltar(){ sel=null; if(document.body.classList.contains('desk')) busca=''; delete $('#app').dataset.tela; desenhar(); }
 async function desfazer(id){
   const m=meus.find(x=>x.id===id); if(!m||m.status==='importado') return;
   if(!(await confirmar('Desfazer este recebimento?',m.cliente+' — '+brl(m.valor)+'\nEle ainda não entrou no financeiro. Desfaça só se foi lançado errado.','Sim, desfazer','Voltar'))) return;
@@ -265,7 +283,7 @@ function desenhar(){
   const card = p=>{ const r=restanteDe(p); return '<button class="ped" data-id="'+esc(p.id)+'"><div class="tx"><div class="nm">'+esc(p.cliente||'(sem nome)')+'</div><small>'+(p.numero?'Pedido N° '+esc(p.numero)+' · ':'')+(p.vencimento?'vence '+dataBR(p.vencimento):'')+((Number(p.recebido)>0)?' · já pagou '+brl(p.recebido):'')+'</small></div><div class="vl">'+brl(r)+'<small>a receber</small></div></button>'; };
   const MAX=25;
   A.innerHTML =
-   '<div class="topo"><div class="ic"><img src="icon-192.png" alt=""></div><div class="tx"><h1>Caixa VK</h1><div class="sub">Cai na conta: <b>'+esc(conf&&conf.contaCaixa?conf.contaCaixa:'(abra o Livro Caixa)')+'</b></div></div><button class="sair" id="bSair">Sair</button></div>'
+   '<div class="topo"><div class="ic"><img src="icon-192.png" alt=""></div><div class="tx"><h1>Caixa VK</h1><div class="sub">Cai na conta: <b>'+esc(conf&&conf.contaCaixa?conf.contaCaixa:'(abra o Livro Caixa)')+'</b></div></div><button class="sair" id="bTemaM" title="Trocar tema"></button><button class="sair" id="bSair">Sair</button></div>'
   +(offline?'<div class="off">📵 Sem sinal. O que você receber fica guardado e sobe sozinho quando o sinal voltar.</div>':'')
   +(erros.length?'<div class="alerta">⛔ '+erros.length+' recebimento(s) NÃO entraram no financeiro. Veja o motivo no final desta tela.</div>':'')
   +'<div class="cols"><div class="c2a">'
@@ -280,7 +298,7 @@ function desenhar(){
   +'</div><div class="c2b"><h3 class="sec">Meus recebimentos recentes</h3><div class="card">'+(meus.length? meus.slice(0,15).map(m=>'<div class="hist"><div><b>'+esc(m.cliente)+'</b><small>'+dataBR(m.data)+' · '+brl(m.valor)+(m.troco>0?' · troco '+brl(m.troco):'')+'</small>'+((m.status==='erro'||m.status==='sem_conta')&&m.erro?'<small style="color:var(--bad);font-weight:700">⛔ '+esc(m.erro)+'</small>':'')+'</div><div style="text-align:right"><span class="tag t-'+esc(m.status)+'">'+({novo:'Enviado',importado:'No financeiro ✔',erro:'NÃO entrou',sem_conta:'NÃO entrou'}[m.status]||esc(m.status))+'</span>'+(m.status!=='importado'?'<br><a href="#" data-del="'+esc(m.id)+'" style="font-size:13px;color:var(--soft)">desfazer</a>':'')+'</div></div>').join('') : '<div class="vazio">Nenhum recebimento ainda.</div>')+'</div>'
   +'</div></div><div class="atalhos"><kbd>/</kbd> procurar · <kbd>Enter</kbd> abre o primeiro da lista · <kbd>F2</kbd> venda direta</div><div class="min">'+esc(usuario.email)+'</div>';
   primeiroId = (lista[0]||listaVk[0]||{}).id||'';
-  $('#bSair').onclick=sair; $('#bVk').onclick=buscarIndustrial; $('#bVD').onclick=abrirVenda;
+  $('#bSair').onclick=sair; $('#bTemaM').onclick=()=>aplicarTema(document.documentElement.dataset.tema==='escuro'?'claro':'escuro'); aplicarTema(document.documentElement.dataset.tema); $('#bVk').onclick=buscarIndustrial; $('#bVD').onclick=abrirVenda;
   const fb=$('#fBusca'); fb.oninput=()=>{ busca=fb.value; desenhar(); };
   if(foco){ fb.focus(); try{ fb.setSelectionRange(pos,pos); }catch(e){} }
   A.querySelectorAll('.ped').forEach(b=>b.onclick=()=>abrirReceber(b.dataset.id));
@@ -413,34 +431,67 @@ function montarDesk(A){
   A.dataset.desk='1'; A.dataset.modo=modo; A.className='wrap desk'; document.body.classList.add('desk');
   A.innerHTML='<header class="dk-top"><div class="dk-marca"><img src="icon-192.png" alt=""><div><b>Caixa VK</b><small>Frente de caixa em dinheiro</small></div></div>'
    +'<div class="dk-tabs"><button class="dk-tab'+(modo==='receber'?' on':'')+'" id="tReceber">📋 Receber pedido<small>F3</small></button><button class="dk-tab'+(modo==='venda'?' on':'')+'" id="tVenda">🛒 Venda direta<small>F2</small></button></div>'
-   +'<div class="dk-info"><div>Operador<b>'+esc((usuario.email||'').split('@')[0])+'</b></div><div>Cai na conta<b id="dkConta"></b></div><div>Data e hora<b id="dkHora" class="mono"></b></div><div>Hoje<b id="dkHoje" class="mono"></b></div></div>'
-   +'<span class="dk-live" id="dkLive">Caixa aberto</span><button class="sair" id="bSair">Sair</button></header><div class="dk-corpo" id="dkCorpo"></div>';
+   +'<div class="dk-dir"><div class="dk-chip">Cai na conta<b id="dkConta"></b></div><div class="dk-chip">Data e hora<b id="dkHora" class="mono"></b></div>'
+   +'<button class="dk-btn" id="bHist" title="Ver o que foi recebido hoje">📒 Caixa de hoje<span class="dk-bad" id="dkBad"></span></button>'
+   +'<button class="dk-btn" id="bTema" title="Trocar entre tema claro e escuro"></button>'
+   +'<span class="dk-live" id="dkLive">Caixa aberto</span>'
+   +'<div class="dk-op"><div>Operador<b>'+esc((usuario.email||'').split('@')[0])+'</b></div><button class="sair" id="bSair">Sair</button></div></div></header><div class="dk-corpo" id="dkCorpo"></div>'
+   +'<div class="dk-ov" id="dkOv"><div class="dk-mod"><div class="dk-mod-cab"><span>📒 Caixa de hoje</span><button class="sair" id="bFecharHist">Fechar (Esc)</button></div><div class="dk-mod-cor" id="dkHistCor"></div></div></div>';
+  $('#bHist').onclick=()=>deskHist(true); $('#bFecharHist').onclick=()=>deskHist(false); $('#dkOv').onclick=e=>{ if(e.target.id==='dkOv') deskHist(false); }; $('#bTema').onclick=()=>aplicarTema(document.documentElement.dataset.tema==='escuro'?'claro':'escuro'); aplicarTema(document.documentElement.dataset.tema);
   $('#tReceber').onclick=()=>setModo('receber'); $('#tVenda').onclick=()=>setModo('venda'); $('#bSair').onclick=sair; relogio();
   if(modo==='venda') montarDeskVenda(); else montarDeskReceber();
 }
 function relogio(){ const e=$('#dkHora'); if(e){ const d=new Date(); e.textContent=d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); } }
 setInterval(relogio,20000);
+function aplicarTema(t){
+  document.documentElement.dataset.tema=t; try{ localStorage.setItem('caixa_tema',t); }catch(e){}
+  const mt=document.querySelector('meta[name=theme-color]'); if(mt) mt.content=(t==='escuro'?'#0b1220':'#14315C');
+  const bt=$('#bTema'); if(bt) bt.textContent=(t==='escuro'?'☀️ Tema claro':'🌙 Tema escuro');
+  const bm=$('#bTemaM'); if(bm) bm.textContent=(t==='escuro'?'☀️':'🌙');
+}
+function deskHistHTML(){
+  const td=hoje(), hj=meus.filter(m=>m.data===td&&m.status!=='erro'), tot=hj.reduce((s,m)=>s+(Number(m.valor)||0),0), erros=meus.filter(m=>m.status==='erro'||m.status==='sem_conta');
+  return (erros.length?'<div class="alerta">⛔ '+erros.length+' recebimento(s) NÃO entraram no financeiro. O motivo aparece em cada um, abaixo.</div>':'')
+   +'<div class="total"><div class="peq">Recebido hoje em dinheiro</div><b>'+brl(tot)+'</b><div class="info">'+hj.length+' recebimento(s)</div></div><h3 class="sec">Meus recebimentos recentes</h3>'
+   +(meus.length? meus.slice(0,30).map(m=>'<div class="hist"><div><b>'+esc(m.cliente)+'</b><small>'+dataBR(m.data)+' · '+brl(m.valor)+(m.troco>0?' · troco '+brl(m.troco):'')+'</small>'+((m.status==='erro'||m.status==='sem_conta')&&m.erro?'<small style="color:var(--bad);font-weight:700">⛔ '+esc(m.erro)+'</small>':'')+'</div><div style="text-align:right"><span class="tag t-'+esc(m.status)+'">'+({novo:'Enviado',importado:'No financeiro ✔',erro:'NÃO entrou',sem_conta:'NÃO entrou'}[m.status]||esc(m.status))+'</span>'+(m.status!=='importado'?'<br><a href="#" data-del="'+esc(m.id)+'" style="font-size:13px;color:var(--soft)">desfazer</a>':'')+'</div></div>').join('') : '<div class="vazio">Nenhum recebimento ainda.</div>');
+}
+function deskHist(abrir){
+  const ov=$('#dkOv'); if(!ov) return;
+  if(abrir===false){ ov.classList.remove('on'); return; }
+  const c=$('#dkHistCor'); c.innerHTML=deskHistHTML(); ov.classList.add('on');
+  c.querySelectorAll('[data-del]').forEach(a=>a.onclick=e=>{ e.preventDefault(); desfazer(a.dataset.del); });
+}
 function deskAtualizar(){
-  const td=hoje(), hj=meus.filter(m=>m.data===td&&m.status!=='erro'); const tot=hj.reduce((s,m)=>s+(Number(m.valor)||0),0);
-  const c=$('#dkConta'); if(c) c.textContent=(conf&&conf.contaCaixa)||'(abra o Livro Caixa)'; const h=$('#dkHoje'); if(h) h.textContent=brl(tot)+' · '+hj.length;
+  const erros=meus.filter(m=>m.status==='erro'||m.status==='sem_conta');
+  const c=$('#dkConta'); if(c) c.textContent=(conf&&conf.contaCaixa)||'(abra o Livro Caixa)';
+  const bd=$('#dkBad'); if(bd){ bd.textContent='⛔ '+erros.length; bd.classList.toggle('on',erros.length>0); }
   const lv=$('#dkLive'); if(lv){ lv.textContent=offline?'Sem sinal':'Caixa aberto'; lv.style.color=offline?'var(--warn)':'var(--ok)'; }
+  const ov=$('#dkOv'); if(ov&&ov.classList.contains('on')){ const cc=$('#dkHistCor'); cc.innerHTML=deskHistHTML(); cc.querySelectorAll('[data-del]').forEach(a=>a.onclick=e=>{ e.preventDefault(); desfazer(a.dataset.del); }); }
   if(modo==='receber'){ deskListarReceber(); deskLado(); }
 }
 function montarDeskReceber(){
-  $('#dkCorpo').innerHTML='<section class="dk-esq"><input id="fBusca" class="dk-busca" type="search" placeholder="🔎 Procurar cliente ou nº do pedido…  ( / )" autocomplete="off" value="'+esc(busca)+'"><div class="dk-scroll" id="dkRList"></div></section><aside class="dk-lado" id="dkLado"></aside>';
+  busca='';
+  $('#dkCorpo').innerHTML='<section class="dk-esq"><input id="fBusca" class="dk-busca" type="search" placeholder="🔎 Digite o nome do cliente ou nº do pedido…  ( / )" autocomplete="off" value=""><div class="dk-scroll" id="dkRList"></div></section><aside class="dk-lado" id="dkLado"></aside>';
   const fb=$('#fBusca'); fb.oninput=()=>{ busca=fb.value; deskListarReceber(); }; fb.focus();
   deskAtualizar.chave=''; 
 }
 function deskListarReceber(){
-  const w=$('#dkRList'); if(!w) return; const q=norm(busca);
-  const filtra=p=>!q||norm(p.cliente+' '+p.numero+' '+p.descricao).includes(q);
-  const lista=pedidos.filter(p=>restanteDe(p)>0.009).filter(filtra).sort((a,b)=>String(b.vencimento).localeCompare(String(a.vencimento)));
-  const listaVk=vkLista.filter(p=>restanteDe(p)>0.009 && !pedidos.some(x=>x.vkPedidoId&&x.vkPedidoId===p.vkPedidoId)).filter(filtra);
+  const w=$('#dkRList'); if(!w) return; const q=norm(busca.trim());
+  /* PRIVACIDADE: nunca mostra lista de quem está devendo. Só aparece o que o operador digitar (mín. 3 letras). */
+  if(q.length<3){
+    primeiroId='';
+    w.innerHTML='<div class="vazio" style="margin-top:40px"><span class="big">🔎</span><b>Digite o nome do cliente ou o nº do pedido</b><br>Por segurança, a lista de quem está devendo não aparece nesta tela.</div>';
+    return;
+  }
+  const filtra=p=>norm(p.cliente+' '+p.numero).includes(q);
+  const todos=pedidos.filter(p=>restanteDe(p)>0.009).filter(filtra).sort((a,b)=>String(b.vencimento).localeCompare(String(a.vencimento)));
+  const todosVk=vkLista.filter(p=>restanteDe(p)>0.009 && !pedidos.some(x=>x.vkPedidoId&&x.vkPedidoId===p.vkPedidoId)).filter(filtra);
+  const lista=todos.slice(0,6), listaVk=todosVk.slice(0,6);
   primeiroId=(lista[0]||listaVk[0]||{}).id||'';
-  w.innerHTML='<h3 class="sec" style="margin-top:4px">A receber no financeiro ('+lista.length+')</h3>'
-   +(lista.length?'<div class="dk-lista">'+lista.map(cardPed).join('')+'</div>':'<div class="vazio"><span class="big">🔎</span>'+(q?'Nenhum cliente com esse nome no financeiro.':'Nada a receber no financeiro agora.')+'</div>')
-   +'<div style="max-width:480px;margin:6px 0"><button class="btn sec" id="bVk" '+(vkBuscando?'disabled':'')+'>'+(vkBuscando?'⏳ Buscando no Industrial…':'🔄 Não achou? Buscar pedidos no Industrial')+'</button>'+(vkHora?'<div class="min" style="text-align:left;margin-top:6px">Industrial consultado às '+vkHora+'</div>':'')+'</div>'
-   +(vkHora?'<h3 class="sec">Do Industrial — ainda não no financeiro ('+listaVk.length+')</h3>'+(listaVk.length?'<div class="dk-lista">'+listaVk.map(cardPed).join('')+'</div>':'<div class="vazio"><span class="big">🔎</span>Nenhum pedido do Industrial com esse nome.</div>'):'');
+  const mais=(todos.length>6||todosVk.length>6)?'<div class="min" style="text-align:left;margin:8px 0">Aparecem só os 6 primeiros. Digite mais letras do nome para achar o cliente.</div>':'';
+  w.innerHTML=(lista.length?'<div class="dk-lista">'+lista.map(cardPed).join('')+'</div>':'<div class="vazio"><span class="big">🔎</span>Nenhum pedido a receber com esse nome no financeiro.</div>')+mais
+   +'<div style="max-width:480px;margin:6px 0"><button class="btn sec" id="bVk" '+(vkBuscando?'disabled':'')+'>'+(vkBuscando?'⏳ Buscando no Industrial…':'🔄 Não achou? Buscar no Industrial')+'</button>'+(vkHora?'<div class="min" style="text-align:left;margin-top:6px">Industrial consultado às '+vkHora+'</div>':'')+'</div>'
+   +(vkHora?(listaVk.length?'<h3 class="sec">Do Industrial — ainda não no financeiro</h3><div class="dk-lista">'+listaVk.map(cardPed).join('')+'</div>':'<div class="vazio"><span class="big">🔎</span>Nenhum pedido do Industrial com esse nome.</div>'):'');
   w.querySelectorAll('.ped').forEach(b=>b.onclick=()=>abrirReceber(b.dataset.id)); const bv=$('#bVk'); if(bv) bv.onclick=buscarIndustrial;
 }
 function deskLado(){
@@ -458,12 +509,10 @@ function deskLado(){
     L.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{ $('#rValor').value=String(Number(b.dataset.v).toFixed(2)).replace('.',','); atualizarCalc(); });
     atualizarCalc(); const rv=$('#rValor'); rv.focus(); rv.select();
   } else {
-    const td=hoje(), hj=meus.filter(m=>m.data===td&&m.status!=='erro'), tot=hj.reduce((s,m)=>s+(Number(m.valor)||0),0), erros=meus.filter(m=>m.status==='erro'||m.status==='sem_conta');
-    L.innerHTML='<div class="dk-lado-cab"><span>Recebido hoje</span></div><div class="dk-box">'+(erros.length?'<div class="alerta">⛔ '+erros.length+' recebimento(s) NÃO entraram no financeiro. Veja o motivo abaixo.</div>':'')
-     +'<div class="total"><div class="peq">Recebido hoje em dinheiro</div><b>'+brl(tot)+'</b><div class="info">'+hj.length+' recebimento(s)</div></div><h3 class="sec">Meus recebimentos recentes</h3>'
-     +(meus.length? meus.slice(0,20).map(m=>'<div class="hist"><div><b>'+esc(m.cliente)+'</b><small>'+dataBR(m.data)+' · '+brl(m.valor)+(m.troco>0?' · troco '+brl(m.troco):'')+'</small>'+((m.status==='erro'||m.status==='sem_conta')&&m.erro?'<small style="color:var(--bad);font-weight:700">⛔ '+esc(m.erro)+'</small>':'')+'</div><div style="text-align:right"><span class="tag t-'+esc(m.status)+'">'+({novo:'Enviado',importado:'No financeiro ✔',erro:'NÃO entrou',sem_conta:'NÃO entrou'}[m.status]||esc(m.status))+'</span>'+(m.status!=='importado'?'<br><a href="#" data-del="'+esc(m.id)+'" style="font-size:13px;color:var(--soft)">desfazer</a>':'')+'</div></div>').join('') : '<div class="vazio">Nenhum recebimento ainda.<br>Escolha um cliente ao lado.</div>')
+    const erros=meus.filter(m=>m.status==='erro'||m.status==='sem_conta');
+    L.innerHTML='<div class="dk-lado-cab"><span>💵 Receber em dinheiro</span></div><div class="dk-vazio">'+(erros.length?'<div class="alerta" style="width:100%;text-align:left">⛔ '+erros.length+' recebimento(s) NÃO entraram no financeiro. Toque em "📒 Caixa de hoje" (barra de cima) para ver o motivo.</div>':'')
+     +'<span class="big">👈</span><b>Escolha um pedido ao lado</b><span>Digite o nome do cliente na busca e toque no pedido.</span>'
      +'<div class="atalhos"><kbd>/</kbd> procurar · <kbd>Enter</kbd> abre o primeiro · <kbd>F2</kbd> venda direta</div></div>';
-    L.querySelectorAll('[data-del]').forEach(a=>a.onclick=e=>{ e.preventDefault(); desfazer(a.dataset.del); });
   }
 }
 function montarDeskVenda(){
@@ -501,6 +550,7 @@ document.addEventListener('keydown',e=>{
     else if(e.key==='Escape' && bs.length){ e.preventDefault(); bs[bs.length-1].click(); }
     return;
   }
+  const ovh=$('#dkOv'); if(ovh&&ovh.classList.contains('on')){ if(e.key==='Escape'){ e.preventDefault(); deskHist(false); } return; }
   const dk=ehDesk(), tela = dk ? (modo==='venda' ? 'venda' : (sel?'receber':'')) : ($('#app').dataset.tela||''), digitando=/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement||{}).tagName||'');
   if(e.key==='Escape'){ if(tela==='venda' && !dk){ fecharVenda(); e.preventDefault(); } else if(tela==='receber'){ voltar(); e.preventDefault(); } return; }
   if(e.key==='F9'){ e.preventDefault(); if(tela==='venda') concluirVenda(); else if(tela==='receber') confirmarRecebimento(); return; }

@@ -274,7 +274,12 @@ function jaNoApp(p, incluirImportados){ return r2(meus.filter(m=>(m.vkPedidoId||
 function restanteDe(p){ return r2((Number(p.restante)||0) - jaNoApp(p, p.origemVK)); }
 
 async function vkDb(){
-  if(!conf || !conf.vk) throw new Error('O acesso ao Industrial ainda não foi publicado. Abra o Livro Caixa uma vez e tente de novo.');
+  /* o acesso ao Industrial chega do Firestore alguns instantes depois do login: espera um pouco e, se precisar, usa a cópia guardada neste computador */
+  const guardado=()=>{ try{ const g=JSON.parse(localStorage.getItem('caixa_vkcfg')||'null'); return g&&g.firebaseConfig&&g.email&&g.senha?g:null; }catch(e){ return null; } };
+  if(!conf || !conf.vk){ const g=guardado(); if(g) conf=Object.assign({},conf||{},{vk:g}); }
+  for(let i=0; i<60 && (!conf || !conf.vk); i++) await new Promise(r=>setTimeout(r,200));
+  if(!conf) throw new Error('Não consegui ler a configuração do Livro Caixa. Confira a internet e tente de novo.');
+  if(!conf.vk) throw new Error('O acesso ao Industrial ainda não foi publicado. Abra o Livro Caixa uma vez e tente de novo.');
   if(!vkApp) vkApp = firebase.initializeApp(conf.vk.firebaseConfig,'vk-industrial');
   const a = vkApp.auth(); if(!a.currentUser) await a.signInWithEmailAndPassword(conf.vk.email, conf.vk.senha);
   return vkApp.firestore();

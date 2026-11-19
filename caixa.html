@@ -119,6 +119,54 @@ html[data-tema=escuro] .dk-tb th{background:#16223a}html[data-tema=escuro] .dk-t
 .dk-box h2{font-family:var(--disp);margin:2px 0 4px;font-size:24px}
 .dk-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px}
 .atalhos{display:block;text-align:center;color:var(--soft);font-size:12.5px;margin-top:10px}.atalhos kbd{background:var(--campo);border:1px solid var(--bd);border-radius:6px;padding:1px 7px;font-family:var(--mono);font-size:12px}
+
+/* ===== visual tecnológico (computador) ===== */
+body.desk{background:linear-gradient(180deg,#edf2fb 0%,#f8faff 100%)}
+html[data-tema=escuro] body.desk{background:linear-gradient(180deg,#08101f 0%,#0b1426 100%)}
+body.desk::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(rgba(59,111,224,.13) 1px,transparent 1px);background-size:26px 26px;mask-image:linear-gradient(180deg,#000 0%,transparent 70%)}
+.wrap.desk{position:relative}
+.dk-top{background:linear-gradient(110deg,#0a1b38 0%,#13305b 58%,#0e4a6b 100%);border-bottom:0;padding:9px 18px;gap:14px;box-shadow:0 10px 30px -12px rgba(10,27,56,.7);color:#fff;position:relative}
+.dk-top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#22e3c0,#3b8bff,transparent);opacity:.9}
+.dk-marca{gap:10px;white-space:nowrap}.dk-marca img{width:40px;height:40px;box-shadow:0 0 0 2px rgba(255,255,255,.15),0 6px 18px -4px rgba(34,227,192,.5)}
+.dk-marca b{color:#fff;font-size:19px;letter-spacing:.01em}.dk-marca small{display:none;color:#9fb6d6}
+@media (min-width:1440px){.dk-marca small{display:block}}
+.dk-tabs{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);padding:4px;gap:4px;backdrop-filter:blur(6px)}
+.dk-tab{color:#cfe0f7;white-space:nowrap;padding:9px 18px;font-size:15px;border-radius:999px}.dk-tab small{display:inline}
+@media (max-width:1339px){.dk-tab small{display:none}}
+.dk-tab.on{color:#04221d;background:linear-gradient(135deg,#2ee6c5,#4aa8ff);box-shadow:0 0 18px -2px rgba(46,230,197,.65)}
+.dk-dir{gap:8px;justify-self:end;white-space:nowrap}
+.dk-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#9fb6d6;padding:5px 12px}.dk-chip b{color:#fff;font-size:14px}
+.dk-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;min-height:42px;padding:0 14px;font-size:14px}.dk-btn:hover{background:rgba(255,255,255,.16);border-color:#2ee6c5;color:#fff}
+.dk-btn .tx{display:inline}@media (max-width:1339px){.dk-btn .tx{display:none}}
+.dk-live{color:#2ee6c5!important;font-size:12.5px}.dk-live::before{background:#2ee6c5;box-shadow:0 0 10px #2ee6c5}
+.dk-op{border-left:1px solid rgba(255,255,255,.18);color:#9fb6d6}.dk-op b{color:#fff;font-size:14px}
+.dk-top .sair{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;padding:8px 12px}
+.dk-corpo{grid-template-columns:minmax(0,1fr) 420px;gap:0}
+.dk-esq{padding:18px 22px 0}
+/* busca com botão Pesquisar */
+.dk-pesq{display:flex;gap:10px;align-items:center;background:var(--card);border:1.5px solid var(--bd);border-radius:18px;padding:7px 8px 7px 18px;box-shadow:0 14px 34px -18px rgba(20,49,92,.45);transition:.15s;flex-shrink:0}
+.dk-pesq:focus-within{border-color:#2f7bff;box-shadow:0 0 0 4px rgba(47,123,255,.15),0 14px 34px -18px rgba(20,49,92,.5)}
+.dk-pesq .lupa{font-size:22px}.dk-pesq input{border:0!important;box-shadow:none!important;background:transparent!important;font-size:19px;min-height:48px;padding:0 6px;flex:1}
+.dk-go{border:0;border-radius:13px;padding:0 28px;min-height:48px;font-weight:700;font-size:16px;color:#04221d;background:linear-gradient(135deg,#2ee6c5,#4aa8ff);cursor:pointer;box-shadow:0 8px 20px -8px rgba(46,230,197,.8)}.dk-go:active{transform:scale(.97)}
+.dk-lista .ped{border-radius:16px;transition:.15s}.dk-lista .ped:hover{border-color:#2f7bff;box-shadow:0 0 0 3px rgba(47,123,255,.12),0 16px 30px -16px rgba(20,49,92,.5);transform:translateY(-1px)}
+/* painel da direita sem barra de rolagem */
+.dk-lado{border-left:0;margin:14px 18px 16px 0;border-radius:22px;border:1px solid var(--bd);overflow:hidden;box-shadow:0 22px 50px -26px rgba(20,49,92,.55);position:relative}
+.dk-lado::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#2ee6c5,#4aa8ff)}
+.dk-lado-cab{padding:12px 18px;font-size:16px}
+.dk-box{padding:12px 18px 16px;overflow:hidden;display:flex;flex-direction:column;gap:2px}
+.dk-box h2{font-size:21px;margin:0}.dk-box .sub{font-size:13px}
+.dk-box label{margin:8px 0 4px;font-size:12px}
+.dk-box .dk-sub{margin-top:8px}.dk-box .dk-tot{font-size:38px;background:linear-gradient(135deg,#0f9d86,#2f7bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+html[data-tema=escuro] .dk-box .dk-tot{background:linear-gradient(135deg,#2ee6c5,#6cb6ff);-webkit-background-clip:text;background-clip:text}
+.dk-box .pre input{font-size:26px;min-height:52px}.dk-box .chips{margin-top:6px}.dk-box .chips button{padding:9px 4px;font-size:14.5px;min-width:60px}
+.dk-box .calc{margin-top:6px;padding:8px 12px;font-size:15px}
+.dk-box input[type=date]{min-height:44px;font-size:16px}
+.dk-box .btn,.dk-rod .btn{min-height:54px;font-size:18px;margin-top:10px;background:linear-gradient(135deg,#17c9a4,#2f7bff);border:0;color:#fff;box-shadow:0 12px 26px -12px rgba(47,123,255,.8)}
+.dk-vazio{padding:24px 24px}
+.dk-itens{padding:2px 16px}
+.dk-rod{padding:10px 18px 14px;overflow:hidden;max-height:none}.dk-rod label{margin:6px 0 3px;font-size:12px}
+.dk-rod .pre input{font-size:24px;min-height:50px}.dk-rod select{min-height:44px}.dk-rod .dk-tot{font-size:32px}.dk-rod .chips{margin-top:6px}.dk-rod .chips button{padding:8px 4px;font-size:14px;min-width:56px}.dk-rod .calc{margin-top:6px;padding:7px 12px;font-size:15px}
+@media (max-height:760px){.dk-box .dk-tot{font-size:32px}.dk-box .pre input{min-height:46px;font-size:23px}.dk-box .btn,.dk-rod .btn{min-height:48px;font-size:17px}.dk-rod .pre input{min-height:44px}.dk-rod select{min-height:38px}}
 </style>
 </head>
 <body>
@@ -248,11 +296,11 @@ async function confirmarRecebimento(){
   const pr=db.collection('caixa_app_recebimentos').doc(id).set(doc);
   pr.catch(e=>erro('Não consegui enviar','O recebimento ficou guardado no aparelho. Motivo: '+(e.message||e)));
   await Promise.race([pr.catch(()=>{}), new Promise(r=>setTimeout(r,1500))]);
-  salvando=false; sel=null; delete $('#app').dataset.tela; busca='';
+  salvando=false; sel=null; delete $('#app').dataset.tela; busca=''; buscaDesk='';
   meus.unshift({...doc,pendente:true}); desenhar();
   await aviso({titulo:'✔ Recebido!',tipo:'ok',texto: (offline?'Sem sinal agora. Ficou guardado no aparelho e vai sozinho quando o sinal voltar.\n':'') + brl(aplicado)+' de '+doc.cliente+(troco>0?'\nDevolva '+brl(troco)+' de troco.':'')+'\nO Livro Caixa lança no financeiro sozinho (conta Caixa físico) quando for aberto.'});
 }
-function voltar(){ sel=null; if(document.body.classList.contains('desk')) busca=''; delete $('#app').dataset.tela; desenhar(); }
+function voltar(){ sel=null; if(document.body.classList.contains('desk')){ busca=''; buscaDesk=''; setTimeout(()=>deskLimparBusca(true),0); } delete $('#app').dataset.tela; desenhar(); }
 async function desfazer(id){
   const m=meus.find(x=>x.id===id); if(!m||m.status==='importado') return;
   if(!(await confirmar('Desfazer este recebimento?',m.cliente+' — '+brl(m.valor)+'\nEle ainda não entrou no financeiro. Desfaça só se foi lançado errado.','Sim, desfazer','Voltar'))) return;
@@ -431,8 +479,8 @@ function montarDesk(A){
   A.dataset.desk='1'; A.dataset.modo=modo; A.className='wrap desk'; document.body.classList.add('desk');
   A.innerHTML='<header class="dk-top"><div class="dk-marca"><img src="icon-192.png" alt=""><div><b>Caixa VK</b><small>Frente de caixa em dinheiro</small></div></div>'
    +'<div class="dk-tabs"><button class="dk-tab'+(modo==='receber'?' on':'')+'" id="tReceber">📋 Receber pedido<small>F3</small></button><button class="dk-tab'+(modo==='venda'?' on':'')+'" id="tVenda">🛒 Venda direta<small>F2</small></button></div>'
-   +'<div class="dk-dir"><div class="dk-chip">Cai na conta<b id="dkConta"></b></div><div class="dk-chip">Data e hora<b id="dkHora" class="mono"></b></div>'
-   +'<button class="dk-btn" id="bHist" title="Ver o que foi recebido hoje">📒 Caixa de hoje<span class="dk-bad" id="dkBad"></span></button>'
+   +'<div class="dk-dir"><div class="dk-chip">Conta<b id="dkConta"></b></div><div class="dk-chip">Hora<b id="dkHora" class="mono"></b></div>'
+   +'<button class="dk-btn" id="bHist" title="Ver o que foi recebido hoje">📒<span class="tx"> Caixa de hoje</span><span class="dk-bad" id="dkBad"></span></button>'
    +'<button class="dk-btn" id="bTema" title="Trocar entre tema claro e escuro"></button>'
    +'<span class="dk-live" id="dkLive">Caixa aberto</span>'
    +'<div class="dk-op"><div>Operador<b>'+esc((usuario.email||'').split('@')[0])+'</b></div><button class="sair" id="bSair">Sair</button></div></div></header><div class="dk-corpo" id="dkCorpo"></div>'
@@ -441,12 +489,12 @@ function montarDesk(A){
   $('#tReceber').onclick=()=>setModo('receber'); $('#tVenda').onclick=()=>setModo('venda'); $('#bSair').onclick=sair; relogio();
   if(modo==='venda') montarDeskVenda(); else montarDeskReceber();
 }
-function relogio(){ const e=$('#dkHora'); if(e){ const d=new Date(); e.textContent=d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); } }
+function relogio(){ const e=$('#dkHora'); if(e){ const d=new Date(); e.textContent=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' · '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); } }
 setInterval(relogio,20000);
 function aplicarTema(t){
   document.documentElement.dataset.tema=t; try{ localStorage.setItem('caixa_tema',t); }catch(e){}
   const mt=document.querySelector('meta[name=theme-color]'); if(mt) mt.content=(t==='escuro'?'#0b1220':'#14315C');
-  const bt=$('#bTema'); if(bt) bt.textContent=(t==='escuro'?'☀️ Tema claro':'🌙 Tema escuro');
+  const bt=$('#bTema'); if(bt) bt.innerHTML=(t==='escuro'?'☀️<span class="tx"> Tema claro</span>':'🌙<span class="tx"> Tema escuro</span>');
   const bm=$('#bTemaM'); if(bm) bm.textContent=(t==='escuro'?'☀️':'🌙');
 }
 function deskHistHTML(){
@@ -469,18 +517,23 @@ function deskAtualizar(){
   const ov=$('#dkOv'); if(ov&&ov.classList.contains('on')){ const cc=$('#dkHistCor'); cc.innerHTML=deskHistHTML(); cc.querySelectorAll('[data-del]').forEach(a=>a.onclick=e=>{ e.preventDefault(); desfazer(a.dataset.del); }); }
   if(modo==='receber'){ deskListarReceber(); deskLado(); }
 }
+let buscaDesk='';
+function deskLimparBusca(foco){ buscaDesk=''; const i=$('#dBusca'); if(i){ i.value=''; if(foco) i.focus(); } }
 function montarDeskReceber(){
-  busca='';
-  $('#dkCorpo').innerHTML='<section class="dk-esq"><input id="fBusca" class="dk-busca" type="search" placeholder="🔎 Digite o nome do cliente ou nº do pedido…  ( / )" autocomplete="off" value=""><div class="dk-scroll" id="dkRList"></div></section><aside class="dk-lado" id="dkLado"></aside>';
-  const fb=$('#fBusca'); fb.oninput=()=>{ busca=fb.value; deskListarReceber(); }; fb.focus();
-  deskAtualizar.chave=''; 
+  buscaDesk='';
+  $('#dkCorpo').innerHTML='<section class="dk-esq"><form class="dk-pesq" id="dPesq" autocomplete="off"><span class="lupa">🔎</span><input id="dBusca" type="search" placeholder="Digite o nome do cliente ou o nº do pedido…  ( / )" autocomplete="off"><button class="dk-go" type="submit">Pesquisar</button></form><div class="dk-scroll" id="dkRList"></div></section><aside class="dk-lado" id="dkLado"></aside>';
+  $('#dPesq').onsubmit=e=>{ e.preventDefault(); const v=$('#dBusca').value.trim();
+    if(v && v===buscaDesk && primeiroId){ abrirReceber(primeiroId); return; }   // 2º Enter no mesmo termo: abre o primeiro
+    buscaDesk=v; deskListarReceber(); };
+  $('#dBusca').focus();
+  deskAtualizar.chave='';
 }
 function deskListarReceber(){
-  const w=$('#dkRList'); if(!w) return; const q=norm(busca.trim());
+  const w=$('#dkRList'); if(!w) return; const q=norm(buscaDesk.trim());
   /* PRIVACIDADE: nunca mostra lista de quem está devendo. Só aparece o que o operador digitar (mín. 3 letras). */
   if(q.length<3){
     primeiroId='';
-    w.innerHTML='<div class="vazio" style="margin-top:40px"><span class="big">🔎</span><b>Digite o nome do cliente ou o nº do pedido</b><br>Por segurança, a lista de quem está devendo não aparece nesta tela.</div>';
+    w.innerHTML='<div class="vazio" style="margin-top:40px"><span class="big">🔎</span><b>Digite o nome do cliente ou o nº do pedido e toque em Pesquisar</b><br>Por segurança, a lista de quem está devendo não aparece nesta tela. A busca pede pelo menos 3 letras.</div>';
     return;
   }
   const filtra=p=>norm(p.cliente+' '+p.numero).includes(q);
@@ -512,7 +565,7 @@ function deskLado(){
     const erros=meus.filter(m=>m.status==='erro'||m.status==='sem_conta');
     L.innerHTML='<div class="dk-lado-cab"><span>💵 Receber em dinheiro</span></div><div class="dk-vazio">'+(erros.length?'<div class="alerta" style="width:100%;text-align:left">⛔ '+erros.length+' recebimento(s) NÃO entraram no financeiro. Toque em "📒 Caixa de hoje" (barra de cima) para ver o motivo.</div>':'')
      +'<span class="big">👈</span><b>Escolha um pedido ao lado</b><span>Digite o nome do cliente na busca e toque no pedido.</span>'
-     +'<div class="atalhos"><kbd>/</kbd> procurar · <kbd>Enter</kbd> abre o primeiro · <kbd>F2</kbd> venda direta</div></div>';
+     +'<div class="atalhos"><kbd>/</kbd> procurar · <kbd>Enter</kbd> pesquisa (de novo: abre o 1º) · <kbd>F2</kbd> venda direta</div></div>';
   }
 }
 function montarDeskVenda(){
@@ -556,7 +609,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='F9'){ e.preventDefault(); if(tela==='venda') concluirVenda(); else if(tela==='receber') confirmarRecebimento(); return; }
   if(e.key==='F2'){ e.preventDefault(); if(dk) setModo('venda'); else if(!tela) abrirVenda(); return; }
   if(e.key==='F3'){ e.preventDefault(); if(dk) setModo('receber'); return; }
-  if(e.key==='/' && !digitando){ const i=$('#fBusca')||$('#vBusca'); if(i){ e.preventDefault(); i.focus(); } return; }
+  if(e.key==='/' && !digitando){ const i=$('#dBusca')||$('#fBusca')||$('#vBusca'); if(i){ e.preventDefault(); i.focus(); } return; }
   if(e.key==='Enter' && digitando){
     const id=document.activeElement.id;
     if(id==='rValor'||id==='rData'){ e.preventDefault(); confirmarRecebimento(); }

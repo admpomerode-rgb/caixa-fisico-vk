@@ -54,7 +54,7 @@ h3.sec{margin:18px 4px 8px;font-family:var(--disp);font-size:13px;letter-spacing
 .t-novo{color:var(--warn);background:#FDF3E5} .t-importado{color:var(--ok);background:#E6F6EE} .t-erro,.t-sem_conta{color:var(--bad);background:#FDEEED}
 .off{background:#FDF3E5;color:#7a4a05;border:1px solid var(--warn);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px;font-weight:600}
 .alerta{background:#FDEEED;color:#8a1f19;border:2px solid var(--bad);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-weight:600}
-.cart{display:flex;align-items:center;gap:10px;border-top:1px solid var(--bd);padding:10px 0}.cart:first-child{border-top:0}.cart .tx{flex:1;min-width:0;font-weight:600}.cart .tx small{display:block;color:var(--soft);font-weight:500}
+.parc{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#E8F7F4;border:1px solid #17B8A0;border-radius:10px;padding:9px 11px;margin:0 0 8px;font-size:14px;cursor:pointer;line-height:1.3}.parc input[type=checkbox]{width:20px!important;height:20px!important;min-height:0!important;padding:0!important;margin:0!important;flex:none}.parc small{color:var(--soft);flex-basis:100%}.cart .ent{margin-top:6px;font-size:13px;color:var(--tx);display:flex;align-items:center;gap:6px;flex-wrap:wrap}.cart .ent input{width:72px!important;min-height:36px!important;height:36px;padding:4px 8px!important;font-size:15px!important;border:1px solid var(--bd);border-radius:8px;text-align:right;margin:0!important}.cart .ent .bad{color:#C0392B}.cart{display:flex;align-items:center;gap:10px;border-top:1px solid var(--bd);padding:10px 0}.cart:first-child{border-top:0}.cart .tx{flex:1;min-width:0;font-weight:600}.cart .tx small{display:block;color:var(--soft);font-weight:500}
 .qtd{display:flex;align-items:center;gap:6px}.qtd button{width:44px;height:44px;border-radius:50%;border:1px solid var(--bd);background:var(--campo);color:var(--ac);font-size:22px;font-weight:600}.qtd input{width:64px;min-height:44px;font-size:18px;text-align:center;padding:4px}
 .prod{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:8px;color:var(--tx);font-size:17px;font-weight:600;min-height:56px}.prod small{color:var(--soft);font-weight:500}.prod b{font-family:var(--mono)}
 #modal{position:fixed;inset:0;background:rgba(11,15,20,.6);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
@@ -111,7 +111,7 @@ html[data-tema=escuro] .dk-tb th{background:#16223a}html[data-tema=escuro] .dk-t
 .dk-lista{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}.dk-lista .ped{margin:0}
 .dk-lado{background:var(--card);border-left:1px solid var(--bd);display:flex;flex-direction:column;min-height:0}
 .dk-lado-cab{padding:14px 20px;border-bottom:1px solid var(--bd);font-family:var(--disp);font-weight:600;font-size:17px;display:flex;justify-content:space-between;align-items:center}
-.dk-itens{flex:1;overflow:auto;padding:4px 20px;min-height:90px}
+.dk-itens{flex:1;overflow:auto;padding:4px 20px;min-height:150px}.dk-itens .parc{padding:6px 10px;margin:4px 0 6px;font-size:13.5px}.dk-itens .parc small{display:none}.dk-rod{max-height:62%}
 .dk-rod{padding:14px 20px 18px;border-top:1px solid var(--bd);overflow:auto;max-height:70%}
 .dk-rod .pre input{font-size:28px;min-height:62px}.dk-rod .btn{min-height:64px;font-size:19px}
 .dk-tot-rot{font-size:12px;color:var(--soft);text-transform:uppercase;letter-spacing:.08em;font-weight:600}.dk-tot{font-family:var(--mono);font-size:40px;font-weight:600;line-height:1.1}
@@ -476,6 +476,8 @@ function telaReceber(A){
 
 /* ---------- venda direta: cria o pedido no Industrial (com o próximo número da sequência) e já avisa o financeiro ---------- */
 const totalCarrinho = ()=>r2(carrinho.reduce((s,i)=>s+i.quantidade*i.valorUnitario,0));
+var parcOn=false;   // entrega parcial ligada na venda atual
+const entAgora=i=>parcOn?Math.max(0,Math.min(i.quantidade,i.ent==null?i.quantidade:i.ent)):i.quantidade;
 async function carregarProdutos(){
   if(vkProdutos.length) return;
   const vdb=await vkDb(); const ps=await vdb.collection('produtos').get({source:'server'});
@@ -487,13 +489,13 @@ async function carregarProdutos(){
   vkProdutos=ps.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.arquivado && p.nome).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
 }
 async function abrirVenda(){
-  carrinho=[]; buscaProd=''; repSel=''; cliSel=null; cliUsos=0; descOff=false;
+  carrinho=[]; parcOn=false; buscaProd=''; repSel=''; cliSel=null; cliUsos=0; descOff=false;
   $('#app').dataset.tela='venda';
   try{ await carregarProdutos(); }
   catch(e){ delete $('#app').dataset.tela; desenhar(); await erro('Não consegui carregar os produtos', /network/i.test(e.code||e.message)?'Sem internet. Tente de novo quando tiver sinal.':(e.message||String(e))); return; }
   desenhar(); listarProds();
 }
-function fecharVenda(){ delete $('#app').dataset.tela; carrinho=[]; cliSel=null; cliUsos=0; descOff=false; desenhar(); }
+function fecharVenda(){ delete $('#app').dataset.tela; carrinho=[]; parcOn=false; cliSel=null; cliUsos=0; descOff=false; desenhar(); }
 
 /* ===== Cliente na venda direta: busca, cadastro, tabela de preços e desconto do Industrial ===== */
 function tabelaDe(c){ return c && c.tabelaPrecoId ? (vkTabelas.find(t=>t.id===c.tabelaPrecoId)||null) : null; }
@@ -511,7 +513,10 @@ function descRegraAtiva(c){   // mesma regra do Industrial: período, nº de ped
   return (Number(r.percentual)>0)?r:null;
 }
 function descResumo(r){ if(r.tipo==='periodo') return 'de '+(r.inicio?dataBR(r.inicio):'hoje')+' até '+(r.fim?dataBR(r.fim):'sem data final'); if(r.tipo==='usos') return 'pedido '+(cliUsos+1)+' de '+r.usosMax; return 'fixo, sem data final'; }
-function calcVenda(){ const sub=totalCarrinho(), r=descOff?null:descRegraAtiva(cliSel), pct=r?Number(r.percentual):0, base=r2(carrinho.reduce((s,i)=>s+(i.promocao?0:i.quantidade*i.valorUnitario),0)), desc=r2(base*pct/100), eco=r2(carrinho.reduce((s,i)=>s+(i.promocao?(i.promocao.precoOriginal-i.promocao.precoPromocional)*i.quantidade:0),0)); return {sub,desc,total:r2(sub-desc),regra:r,pct,eco}; }
+function calcVenda(){ const sub=totalCarrinho(), r=descOff?null:descRegraAtiva(cliSel), pct=r?Number(r.percentual):0, base=r2(carrinho.reduce((s,i)=>s+(i.promocao?0:i.quantidade*i.valorUnitario),0)), desc=r2(base*pct/100), eco=r2(carrinho.reduce((s,i)=>s+(i.promocao?(i.promocao.precoOriginal-i.promocao.precoPromocional)*i.quantidade:0),0));
+  const subA=r2(carrinho.reduce((s,i)=>s+entAgora(i)*i.valorUnitario,0)), baseA=r2(carrinho.reduce((s,i)=>s+(i.promocao?0:entAgora(i)*i.valorUnitario),0)), descA=r2(baseA*pct/100);
+  const totalPedido=r2(sub-desc), parcial=parcOn && carrinho.some(i=>entAgora(i)<i.quantidade-0.0001), total=parcial?r2(subA-descA):totalPedido;
+  return {sub,desc,total,totalPedido,parcial,falta:r2(totalPedido-total),regra:r,pct,eco}; }
 function reprecificar(){ carrinho.forEach(i=>{ const p=vkProdutos.find(x=>x.id===i.produtoId); if(p){ i.valorUnitario=precoDe(p); i.promocao=fotoPromo(p); } }); desenharCarrinho(); if(typeof listarProds==='function') try{ listarProds(); }catch(e){} }
 function nomeProprio(t){ t=String(t||'').trim().replace(/\s+/g,' '); if(t!==t.toUpperCase() && t!==t.toLowerCase()) return t; return t.toLowerCase().split(' ').map((w,i)=>(i>0&&['de','da','do','das','dos','e'].includes(w))?w:w.charAt(0).toUpperCase()+w.slice(1)).join(' '); }
 async function selecionarCliente(c){
@@ -590,10 +595,14 @@ function cadastrarCliente(){
 function addProd(id){ const p=vkProdutos.find(x=>x.id===id); if(!p) return; const ex=carrinho.find(i=>i.produtoId===id); if(ex) ex.quantidade=r2(ex.quantidade+1); else carrinho.push({produtoId:p.id,produto:p.nome,unidade:p.unidade||'un',quantidade:1,valorUnitario:precoDe(p),promocao:fotoPromo(p)}); desenharCarrinho(); }
 function desenharCarrinho(){
   const w=$('#vCart'); if(!w) return;
-  w.innerHTML = carrinho.length ? carrinho.map((i,ix)=>'<div class="cart"><div class="tx">'+esc(i.produto)+'<small>'+(i.promocao?'🔥 <s>'+brl(i.promocao.precoOriginal)+'</s> ':'')+brl(i.valorUnitario)+' / '+esc(i.unidade)+' · <b>'+brl(r2(i.quantidade*i.valorUnitario))+'</b></small></div><div class="qtd"><button data-m="'+ix+'">−</button><input data-q="'+ix+'" inputmode="decimal" value="'+String(i.quantidade).replace('.',',')+'"><button data-p="'+ix+'">+</button></div></div>').join('') : '<div class="vazio">Toque nos produtos abaixo para adicionar.</div>';
-  w.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const i=carrinho[+b.dataset.m]; i.quantidade=r2(i.quantidade-1); if(i.quantidade<=0) carrinho.splice(+b.dataset.m,1); desenharCarrinho(); });
-  w.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ carrinho[+b.dataset.p].quantidade=r2(carrinho[+b.dataset.p].quantidade+1); desenharCarrinho(); });
-  w.querySelectorAll('[data-q]').forEach(inp=>inp.onchange=()=>{ const v=num(inp.value); if(v>0) carrinho[+inp.dataset.q].quantidade=r2(v); else carrinho.splice(+inp.dataset.q,1); desenharCarrinho(); });
+  if(!carrinho.length) parcOn=false;
+  const toggle=carrinho.length?'<label class="parc"><input type="checkbox" id="vParc"'+(parcOn?' checked':'')+'> 📦 <b>Entrega parcial</b> <small>(levar só uma parte agora; o resto fica pendente)</small></label>':'';
+  w.innerHTML = toggle + (carrinho.length ? carrinho.map((i,ix)=>'<div class="cart"><div class="tx">'+esc(i.produto)+'<small>'+(i.promocao?'🔥 <s>'+brl(i.promocao.precoOriginal)+'</s> ':'')+brl(i.valorUnitario)+' / '+esc(i.unidade)+' · <b>'+brl(r2(i.quantidade*i.valorUnitario))+'</b></small>'+(parcOn?'<div class="ent">Levar agora: <input data-e="'+ix+'" inputmode="decimal" value="'+String(entAgora(i)).replace('.',',')+'"> de '+String(i.quantidade).replace('.',',')+' '+esc(i.unidade)+(entAgora(i)<i.quantidade-0.0001?' <b class="bad">falta '+String(r2(i.quantidade-entAgora(i))).replace('.',',')+'</b>':'')+'</div>':'')+'</div><div class="qtd"><button data-m="'+ix+'">−</button><input data-q="'+ix+'" inputmode="decimal" value="'+String(i.quantidade).replace('.',',')+'"><button data-p="'+ix+'">+</button></div></div>').join('') : '<div class="vazio">Toque nos produtos abaixo para adicionar.</div>');
+  const tg=w.querySelector('#vParc'); if(tg) tg.onchange=()=>{ parcOn=tg.checked; if(parcOn) carrinho.forEach(i=>{ if(i.ent==null) i.ent=i.quantidade; }); desenharCarrinho(); };
+  w.querySelectorAll('[data-e]').forEach(inp=>inp.onchange=()=>{ const i=carrinho[+inp.dataset.e]; let v=num(inp.value); if(!(v>=0)) v=0; i.ent=r2(Math.min(v,i.quantidade)); desenharCarrinho(); });
+  w.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const i=carrinho[+b.dataset.m]; const cheio=i.ent!=null&&i.ent>=i.quantidade; i.quantidade=r2(i.quantidade-1); if(cheio||(i.ent!=null&&i.ent>i.quantidade)) i.ent=Math.max(0,i.quantidade); if(i.quantidade<=0) carrinho.splice(+b.dataset.m,1); desenharCarrinho(); });
+  w.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const i=carrinho[+b.dataset.p]; if(i.ent!=null&&i.ent>=i.quantidade) i.ent=r2(i.quantidade+1); i.quantidade=r2(i.quantidade+1); desenharCarrinho(); });
+  w.querySelectorAll('[data-q]').forEach(inp=>inp.onchange=()=>{ const v=num(inp.value); const i=carrinho[+inp.dataset.q]; if(v>0){ const cheio=i.ent!=null&&i.ent>=i.quantidade; i.quantidade=r2(v); if(cheio||(i.ent!=null&&i.ent>i.quantidade)) i.ent=i.quantidade; } else carrinho.splice(+inp.dataset.q,1); desenharCarrinho(); });
   atualizarTotalVenda();
   if(ehDesk()) marcarNoCarrinho();
 }
@@ -601,7 +610,7 @@ function marcarNoCarrinho(){ marcarTiles(); document.querySelectorAll('#vProds t
 function marcarTiles(){ document.querySelectorAll('#vProds .dk-tile').forEach(t=>{ const c=carrinho.find(i=>i.produtoId===t.dataset.id); const q=t.querySelector('.qb'); if(q) q.textContent=c?String(c.quantidade).replace('.',','):''; }); }
 function atualizarTotalVenda(){
   const V=calcVenda(), t=V.total; const el=$('#vTotal'); if(el) el.textContent=brl(t);
-  const vd=$('#vDesc'); if(vd) vd.innerHTML=((V.desc>0||V.eco>0)?'Subtotal '+brl(V.sub)+(V.eco>0?' · 🔥 <b>Promoções: economia de '+brl(V.eco)+'</b>':'')+(V.desc>0?' · 🏷️ <b>Desconto '+esc(String(V.pct))+'%: − '+brl(V.desc)+'</b>':''):'')+(descOff&&cliSel&&descRegraAtiva(cliSel)?' <b class="bad">· desconto do cliente removido</b>':'');
+  const vd=$('#vDesc'); if(vd) vd.innerHTML=(V.parcial?'<b>📦 Cobrar agora (só o que será entregue). Pedido completo: '+brl(V.totalPedido)+' · fica pendente: '+brl(V.falta)+'</b><br>':'')+((V.desc>0||V.eco>0)?'Subtotal '+brl(V.sub)+(V.eco>0?' · 🔥 <b>Promoções: economia de '+brl(V.eco)+'</b>':'')+(V.desc>0?' · 🏷️ <b>Desconto '+esc(String(V.pct))+'%: − '+brl(V.desc)+'</b>':''):'')+(descOff&&cliSel&&descRegraAtiva(cliSel)?' <b class="bad">· desconto do cliente removido</b>':'');
   const rv=$('#vRec'), c=$('#vCalc'); if(!rv||!c) return; const v=num(rv.value);
   if(!(t>0)||!(v>0)){ c.className='calc'; c.textContent=''; return; }
   if(v>t+0.009){ c.className='calc troco'; c.textContent='Troco a devolver: '+brl(r2(v-t)); } else if(v<t-0.009){ c.className='calc falta'; c.textContent='Falta '+brl(r2(t-v))+' — o valor recebido não cobre o total'; } else { c.className='calc exato'; c.textContent='✔ Valor certo'; }
@@ -620,30 +629,32 @@ async function concluirVenda(forma){
   forma = forma==='pix' ? 'pix' : 'dinheiro';
   if(salvando) return;
   const V=calcVenda(), total=V.total; if(!carrinho.length||!(V.sub>0)) return erro('Venda vazia','Escolha pelo menos um produto.');
+  if(parcOn && !(V.total>0)) return erro('Nada será entregue agora','Na entrega parcial, preencha em "Levar agora" a quantidade que o cliente leva hoje (pelo menos um item).');
+  const faltaTxt=V.parcial?carrinho.filter(i=>entAgora(i)<i.quantidade-0.0001).map(i=>'• '+String(r2(i.quantidade-entAgora(i))).replace('.',',')+' '+i.unidade+' de '+i.produto).join('\n'):'';
   if(cliSel&&cliSel.bloqueado && !(await confirmar('⛔ Cliente BLOQUEADO','+cliSel.nome+ está bloqueado no Industrial.\nContinuar a venda mesmo assim?','Continuar a venda','Voltar'))) return;
   let rec=num($('#vRec').value); if(!(rec>0)||forma==='pix') rec=total;
   if(forma==='pix' && !pixConfigurado()) return;
   if(rec<total-0.009) return erro('Valor recebido menor que o total','O cliente entregou '+brl(rec)+' e o total é '+brl(total)+'.');
   const troco=r2(rec-total);
   if(forma==='pix'){ if(pixVendaOk!==total){ if(!(await pixAbrir({valor:total,sub:'Venda direta · '+carrinho.reduce((s,i)=>s+Number(i.quantidade||0),0)+' item(ns)'+(repSel?' · '+((vkReps.find(r=>r.id===repSel)||{}).nome||''):'')}))) return; pixVendaOk=total; } }
-  else if(!(await confirmar('Concluir a venda?', (repSel?'Representante: '+((vkReps.find(r=>r.id===repSel)||{}).nome||'')+'\n':'')+carrinho.map(i=>i.quantidade+' × '+i.produto).join('\n')+(V.desc>0?'\n\nSubtotal: '+brl(V.sub)+'\nDesconto do cliente ('+V.pct+'%): − '+brl(V.desc):'')+'\n\nTotal: '+brl(total)+(troco>0?'\nRecebido: '+brl(rec)+' — devolver troco de '+brl(troco):''),'✅ Sim, concluir','Voltar'))) return;
+  else if(!(await confirmar('Concluir a venda?', (repSel?'Representante: '+((vkReps.find(r=>r.id===repSel)||{}).nome||'')+'\n':'')+(V.parcial?'📦 ENTREGA PARCIAL\n'+carrinho.filter(i=>entAgora(i)>0).map(i=>entAgora(i)+' × '+i.produto).join('\n')+'\n\nFalta entregar (fica pendente):\n'+faltaTxt:carrinho.map(i=>i.quantidade+' × '+i.produto).join('\n'))+(V.desc>0?'\n\nSubtotal: '+brl(V.sub)+'\nDesconto do cliente ('+V.pct+'%): − '+brl(V.desc):'')+'\n\n'+(V.parcial?'Pedido completo: '+brl(V.totalPedido)+'\nCobrar agora: ':'Total: ')+brl(total)+(troco>0?'\nRecebido: '+brl(rec)+' — devolver troco de '+brl(troco):''),'✅ Sim, concluir','Voltar'))) return;
   salvando=true; const b=$('#vOk'); if(b){ b.disabled=true; b.textContent='Salvando…'; }
   try{
     const vdb=await vkDb(); const numero=await reservarNumeroPedido(vdb);
     const agora=new Date().toISOString(), dia=hoje(), pid='ped_'+uuid().replace(/-/g,'').slice(0,18);
-    const itens=carrinho.map(i=>({produto:i.produto,quantidade:i.quantidade,valorUnitario:i.valorUnitario,cor:'padrao',...(i.promocao?{promocao:i.promocao}:{})}));
-    const ped={ id:pid, numero, clienteId:cliSel?cliSel.id:null, representanteId:repSel||'', data:dia, criadoEm:agora, dataEntrega:dia, dataFabricacaoNecessaria:'', dataDespacho:dia, itens, subtotal:V.sub, desconto:V.desc, valorTotal:total,
-      observacoes:'Venda direta no Caixa VK', bonificacao:false, enderecoEntrega:'', bairroEntrega:'', status:'entregue', vendaDireta:true, pagamentoRealizado:true, origem:'caixa-vk', origemApp:'caixa-vk', aprovacao:{estado:'nao_exigida'}, ...(V.desc>0?{descontoOrigem:'cliente',descontoClienteRegraId:V.regra.id,descontoStatus:'aplicado'}:{}), ...(tabelaDe(cliSel)?{tabelaPrecoId:tabelaDe(cliSel).id,tabelaPrecoNome:tabelaDe(cliSel).nome}:{}),
-      pdv:{forma,valorRecebido:rec,troco,operador:usuario.email||'',hora:agora,origem:'caixa-vk'},
-      integracaoLivroCaixa:{tipo:'venda_direta',valor:total,pago:true,data:dia,forma,caixaFisico:forma==='dinheiro'} };
+    const itens=carrinho.map(i=>({produto:i.produto,quantidade:i.quantidade,valorUnitario:i.valorUnitario,cor:'padrao',...(i.promocao?{promocao:i.promocao}:{}),...(V.parcial?{quantidadeEntregue:entAgora(i),quantidadeProduzida:entAgora(i)}:{})}));
+    const ped={ id:pid, numero, clienteId:cliSel?cliSel.id:null, representanteId:repSel||'', data:dia, criadoEm:agora, dataEntrega:dia, dataFabricacaoNecessaria:'', dataDespacho:dia, itens, subtotal:V.sub, desconto:V.desc, valorTotal:V.totalPedido,
+      observacoes:V.parcial?'Venda direta no Caixa VK — ENTREGA PARCIAL (falta entregar o restante)':'Venda direta no Caixa VK', bonificacao:false, enderecoEntrega:'', bairroEntrega:'', status:V.parcial?'parcial':'entregue', vendaDireta:true, pagamentoRealizado:!V.parcial, ...(V.parcial?{entregaParcial:true}:{}), origem:'caixa-vk', origemApp:'caixa-vk', aprovacao:{estado:'nao_exigida'}, ...(V.desc>0?{descontoOrigem:'cliente',descontoClienteRegraId:V.regra.id,descontoStatus:'aplicado'}:{}), ...(tabelaDe(cliSel)?{tabelaPrecoId:tabelaDe(cliSel).id,tabelaPrecoNome:tabelaDe(cliSel).nome}:{}),
+      ...(V.parcial?{pdvParcial:{forma,valorRecebido:rec,troco,operador:usuario.email||'',hora:agora,origem:'caixa-vk',valorPagoAgora:total}}:{pdv:{forma,valorRecebido:rec,troco,operador:usuario.email||'',hora:agora,origem:'caixa-vk'}}),
+      integracaoLivroCaixa:{tipo:'venda_direta',valor:total,valorTotal:V.totalPedido,pago:!V.parcial,parcial:!!V.parcial,data:dia,forma,caixaFisico:forma==='dinheiro'} };
     await vdb.collection('pedidos').doc(pid).set(ped);
     // pedido de produto de revenda gera a despesa de custo, igual ao PDV do Industrial
-    for(const it of carrinho){ const pr=vkProdutos.find(x=>x.id===it.produtoId); if(pr && pr.tipo==='revenda'){ try{ await vdb.collection('despesas_revenda').doc('desp_'+uuid().replace(/-/g,'').slice(0,18)).set({ produtoId:pr.id, produtoNome:pr.nome, quantidade:it.quantidade, custoUnitario:pr.custoCompra||0, custoTotal:r2(it.quantidade*(pr.custoCompra||0)), pedidoId:pid, pedidoNumero:numero, data:dia, criadoEm:agora }); }catch(e){ console.error('despesa revenda',e); } } }
+    for(const it of carrinho){ const pr=vkProdutos.find(x=>x.id===it.produtoId); if(pr && pr.tipo==='revenda' && entAgora(it)>0){ try{ await vdb.collection('despesas_revenda').doc('desp_'+uuid().replace(/-/g,'').slice(0,18)).set({ produtoId:pr.id, produtoNome:pr.nome, quantidade:entAgora(it), custoUnitario:pr.custoCompra||0, custoTotal:r2(entAgora(it)*(pr.custoCompra||0)), pedidoId:pid, pedidoNumero:numero, data:dia, criadoEm:agora }); }catch(e){ console.error('despesa revenda',e); } } }
     // avisa o Livro Caixa (entra no Caixa físico como venda direta)
     const id=uuid();
-    db.collection('caixa_app_recebimentos').doc(id).set({ id, kind:'vk', refId:'', vkPedidoId:pid, cliente:(cliSel?cliSel.nome:'Venda Direta'), numero:String(numero), descricao:'Pedido N° '+numero+' — '+(cliSel?cliSel.nome:'Venda Direta'), vencimento:dia, valor:total, valorEntregue:r2(rec), troco, forma, data:dia, status:'novo', vendaDireta:true, valorTotal:total, vendedorId:repSel||'', vendedorNome:(vkReps.find(r=>r.id===repSel)||{}).nome||'', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() }).catch(e=>erro('Não consegui avisar o Livro Caixa','A venda ficou salva no Industrial (pedido N° '+numero+'). Motivo: '+(e.message||e)));
-    salvando=false; pixVendaOk=0; delete $('#app').dataset.tela; carrinho=[]; repSel=''; cliSel=null; cliUsos=0; descOff=false; if($('#vRec')) $('#vRec').value=''; if($('#vRep')) $('#vRep').value=''; desenhar(); desenharCliente(); desenharCarrinho();
-    await aviso({titulo:'✔ Venda '+numero+' concluída',tipo:'ok',texto:brl(total)+(forma==='pix'?' recebidos no Pix.':(troco>0?'\nDevolva '+brl(troco)+' de troco.':''))+'\nO pedido já está no Industrial como venda direta. O Livro Caixa lança '+(forma==='pix'?'na conta '+((conf.pix&&conf.pix.contaNome)||'do Pix'):'no Caixa físico')+' quando for aberto.'});
+    db.collection('caixa_app_recebimentos').doc(id).set({ id, kind:'vk', refId:'', vkPedidoId:pid, cliente:(cliSel?cliSel.nome:'Venda Direta'), numero:String(numero), descricao:'Pedido N° '+numero+' — '+(cliSel?cliSel.nome:'Venda Direta')+(V.parcial?' (entrega parcial)':''), vencimento:dia, valor:total, valorEntregue:r2(rec), troco, forma, data:dia, status:'novo', vendaDireta:true, valorTotal:V.totalPedido, ...(V.parcial?{entregaParcial:true}:{}), vendedorId:repSel||'', vendedorNome:(vkReps.find(r=>r.id===repSel)||{}).nome||'', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() }).catch(e=>erro('Não consegui avisar o Livro Caixa','A venda ficou salva no Industrial (pedido N° '+numero+'). Motivo: '+(e.message||e)));
+    salvando=false; pixVendaOk=0; delete $('#app').dataset.tela; carrinho=[]; parcOn=false; repSel=''; cliSel=null; cliUsos=0; descOff=false; if($('#vRec')) $('#vRec').value=''; if($('#vRep')) $('#vRep').value=''; desenhar(); desenharCliente(); desenharCarrinho();
+    await aviso({titulo:(V.parcial?'✔ Entrega parcial ':'✔ Venda ')+numero+' registrada',tipo:'ok',texto:brl(total)+(forma==='pix'?' recebidos no Pix.':(troco>0?'\nDevolva '+brl(troco)+' de troco.':''))+(V.parcial?'\n\n📦 FALTA ENTREGAR:\n'+faltaTxt+'\nFalta receber '+brl(V.falta)+' quando entregar o restante.\nO pedido ficou no Industrial como PARCIAL (Entregas parciais).':'\nO pedido já está no Industrial como venda direta.')+' O Livro Caixa lança '+(forma==='pix'?'na conta '+((conf.pix&&conf.pix.contaNome)||'do Pix'):'no Caixa físico')+' quando for aberto.'});
   }catch(e){
     salvando=false; const bb=$('#vOk'); if(bb){ bb.disabled=false; bb.textContent='✅ Concluir venda'; }
     await erro('A venda NÃO foi salva', (e && e.message ? e.message : String(e))+(forma==='pix'?'\n⚠️ O Pix já foi confirmado: toque em Pix de novo (não vai pedir outro QR Code) para salvar a venda.':'\nConfira a internet e toque em Concluir de novo.'));
@@ -864,7 +875,7 @@ function montarDeskVenda(){
    +'<div class="dk-2b"><button class="btn ok" id="vOk">✅ Dinheiro (F9)</button><button class="btn pix" id="vPix">💠 Pix (F4)</button></div></div></aside>';
   $('#vBusca').oninput=e=>{ buscaProd=e.target.value; listarProds(); };
   $('#vRep').onchange=e=>{ repSel=e.target.value; }; $('#vOk').onclick=concluirVenda; $('#vPix').onclick=()=>concluirVenda('pix'); $('#vRec').oninput=atualizarTotalVenda;
-  $('#bLimpar').onclick=()=>{ carrinho=[]; desenharCarrinho(); };
+  $('#bLimpar').onclick=()=>{ carrinho=[]; parcOn=false; desenharCarrinho(); };
   document.querySelectorAll('.dk-rod .chips button').forEach(b=>b.onclick=()=>{ const v=b.dataset.t?calcVenda().total:Number(b.dataset.v); $('#vRec').value=v>0?String(v.toFixed(2)).replace('.',','):''; atualizarTotalVenda(); });
   desenharCliente(); desenharCarrinho(); deskVendaDados(); $('#vBusca').focus();
 }

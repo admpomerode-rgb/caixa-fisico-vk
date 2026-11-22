@@ -378,7 +378,7 @@ async function receberPix(){
   pr.catch(e=>erro('Não consegui enviar','O recebimento ficou guardado no aparelho. Motivo: '+(e.message||e)));
   await Promise.race([pr.catch(()=>{}), new Promise(r=>setTimeout(r,1500))]);
   salvando=false; sel=null; delete $('#app').dataset.tela; busca=''; buscaDesk='';
-  meus.unshift({...doc,pendente:true}); desenhar();
+  if(!meus.some(m=>m.id===doc.id)) meus.unshift({...doc,pendente:true}); desenhar();
   await aviso({titulo:'✔ Pix recebido!',tipo:'ok',texto:(offline?'Sem sinal agora. Ficou guardado no aparelho e vai sozinho quando o sinal voltar.\n':'')+brl(v)+' de '+doc.cliente+(falta>0.009?'\nFica faltando: '+brl(falta):'\nO pedido fica TOTALMENTE pago.')+'\nO Livro Caixa lança na conta '+esc((conf.pix&&conf.pix.contaNome)||'do Pix')+' quando for aberto.'});
 }
 function totaisHoje(){
@@ -404,7 +404,7 @@ async function confirmarRecebimento(){
   pr.catch(e=>erro('Não consegui enviar','O recebimento ficou guardado no aparelho. Motivo: '+(e.message||e)));
   await Promise.race([pr.catch(()=>{}), new Promise(r=>setTimeout(r,1500))]);
   salvando=false; sel=null; delete $('#app').dataset.tela; busca=''; buscaDesk='';
-  meus.unshift({...doc,pendente:true}); desenhar();
+  if(!meus.some(m=>m.id===doc.id)) meus.unshift({...doc,pendente:true}); desenhar();
   await aviso({titulo:'✔ Recebido!',tipo:'ok',texto: (offline?'Sem sinal agora. Ficou guardado no aparelho e vai sozinho quando o sinal voltar.\n':'') + brl(aplicado)+' de '+doc.cliente+(troco>0?'\nDevolva '+brl(troco)+' de troco.':'')+'\nO Livro Caixa lança no financeiro sozinho (conta Caixa físico) quando for aberto.'});
 }
 function voltar(){ sel=null; if(document.body.classList.contains('desk')){ busca=''; buscaDesk=''; setTimeout(()=>deskLimparBusca(true),0); } delete $('#app').dataset.tela; desenhar(); }

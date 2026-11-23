@@ -328,35 +328,114 @@ function atualizarCalc(){
 }
 
 /* ===== Pix: BR Code estático (padrão do Banco Central) + QR Code ===== */
-function pixCRC(str){ let c=0xFFFF; for(let i=0;i<str.length;i++){ c^=str.charCodeAt(i)<<8; for(let j=0;j<8;j++){ c=(c&0x8000)?((c<<1)^0x1021):(c<<1); c&=0xFFFF; } } return c.toString(16).toUpperCase().padStart(4,'0'); }
-const pixTLV=(id,v)=>id+String(v.length).padStart(2,'0')+v;
+const pixBytes=s=>new TextEncoder().encode(String(s));
+function pixCRC(str){ const b=pixBytes(str); let c=0xFFFF; for(let i=0;i<b.length;i++){ c^=b[i]<<8; for(let j=0;j<8;j++){ c=(c&0x8000)?((c<<1)^0x1021):(c<<1); c&=0xFFFF; } } return c.toString(16).toUpperCase().padStart(4,'0'); }
+/* tamanho do campo = BYTES em UTF-8 (não letras); passou de 99 → erro, nunca corta no meio */
+const pixTLV=(id,v)=>{ v=String(v); const n=pixBytes(v).length; if(n>99) throw new Error('O campo '+id+' do Pix passa de 99 bytes.'); return id+String(n).padStart(2,'0')+v; };
+const pixLimpa=(t,max)=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 ]/g,' ').replace(/\s+/g,' ').trim().toUpperCase().slice(0,max);
+function pixCpfOk(d){ if(!/^\d{11}$/.test(d)||/^(\d)\1{10}$/.test(d)) return false; for(const n of [9,10]){ let s=0; for(let i=0;i<n;i++) s+=(+d[i])*(n+1-i); let r=(s*10)%11; if(r===10) r=0; if(r!==+d[n]) return false; } return true; }
+function pixCnpjOk(d){ if(!/^\d{14}$/.test(d)||/^(\d)\1{13}$/.test(d)) return false; for(const n of [12,13]){ let s=0,p=n-7; for(let i=0;i<n;i++){ s+=(+d[i])*p--; if(p<2) p=9; } const r=s%11<2?0:11-s%11; if(r!==+d[n]) return false; } return true; }
+/* devolve '' se a chave está certa; senão a explicação em português simples */
+function pixValidaChave(k){
+  k=String(k==null?'':k);
+  if(!k.trim()) return 'A chave Pix está vazia.';
+  if(k!==k.trim()||/\s/.test(k)) return 'A chave Pix tem espaço sobrando.';
+  if(!/^[\x21-\x7E]+$/.test(k)) return 'A chave Pix tem letra com acento ou símbolo que não existe em chave Pix.';
+  if(/^\d{11}$/.test(k)) return pixCpfOk(k)?'':'O CPF da chave Pix não é válido (confira os números).';
+  if(/^\d{14}$/.test(k)) return pixCnpjOk(k)?'':'O CNPJ da chave Pix não é válido (confira os números).';
+  if(/^\+55\d{10,11}$/.test(k)) return '';
+  if(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(k)) return '';
+  if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(k)&&k.length<=77) return '';
+  return 'A chave Pix não parece CPF, CNPJ, celular (+55…), e-mail nem chave aleatória.';
+}
+function pixValidaConfig(px){
+  if(!px||typeof px!=='object') return 'Falta cadastrar a chave Pix.';
+  const e=pixValidaChave(px.chave); if(e) return e;
+  if(!pixLimpa(px.nome,25)) return 'Falta o nome da empresa no cadastro do Pix.';
+  if(!pixLimpa(px.cidade,15)) return 'Falta a cidade no cadastro do Pix.';
+  return '';
+}
 function pixPayload(o){
+  const erroChave=pixValidaChave(o.chave); if(erroChave) throw new Error(erroChave);
+  const nome=pixLimpa(o.nome,25), cidade=pixLimpa(o.cidade,15);
+  if(!nome) throw new Error('Falta o nome da empresa no cadastro do Pix.');
+  if(!cidade) throw new Error('Falta a cidade no cadastro do Pix.');
+  const v=Number(o.valor); if(!(v>0)||!isFinite(v)||v>9999999999.99) throw new Error('O valor do Pix é inválido.');
   const mai=pixTLV('00','br.gov.bcb.pix')+pixTLV('01',o.chave);
-  let p=pixTLV('00','01')+pixTLV('01','11')+pixTLV('26',mai)+pixTLV('52','0000')+pixTLV('53','986')+(o.valor>0?pixTLV('54',Number(o.valor).toFixed(2)):'')+pixTLV('58','BR')+pixTLV('59',String(o.nome||'').slice(0,25))+pixTLV('60',String(o.cidade||'').slice(0,15))+pixTLV('62',pixTLV('05',o.txid||'***'));
+  let p=pixTLV('00','01')+pixTLV('01','11')+pixTLV('26',mai)+pixTLV('52','0000')+pixTLV('53','986')+pixTLV('54',r2(v).toFixed(2))+pixTLV('58','BR')+pixTLV('59',nome)+pixTLV('60',cidade)+pixTLV('62',pixTLV('05','***'));
   p+='6304'; return p+pixCRC(p);
 }
-function pixConfigurado(){
-  if(conf && conf.pix && conf.pix.chave) return true;
-  erro('Pix não configurado','Falta cadastrar a chave Pix.\nNo Livro Caixa: Contas → 💠 Configurar Pix. Depois abra o Livro Caixa de novo e volte aqui.');
-  return false;
+/* lê o código campo a campo (em bytes). Erro → lança texto */
+function pixLer(s){
+  const b=pixBytes(s), dec=new TextDecoder('utf-8',{fatal:true}), out=[]; let i=0;
+  while(i<b.length){
+    if(i+4>b.length) throw new Error('campo cortado');
+    const id=String.fromCharCode(b[i],b[i+1]), ls=String.fromCharCode(b[i+2],b[i+3]);
+    if(!/^\d\d$/.test(id)||!/^\d\d$/.test(ls)) throw new Error('campo mal formado');
+    const n=+ls; if(i+4+n>b.length) throw new Error('tamanho do campo '+id+' passa do fim');
+    out.push({id,n,v:dec.decode(b.slice(i+4,i+4+n))}); i+=4+n;
+  }
+  return out;
 }
-let pixVendaOk=0;
+/* confere o código pronto contra o que deveria conter. Devolve '' se está tudo certo */
+function pixValidar(payload,esp){
+  try{
+    const bytes=pixBytes(payload); if(bytes.length>512) return 'O código Pix ficou grande demais.';
+    if(!/^[\x20-\x7E]+$/.test(payload)) return 'O código Pix tem caractere fora do padrão.';
+    const c=pixLer(payload), ids=c.map(x=>x.id), get=id=>(c.find(x=>x.id===id)||{}).v;
+    const ordem=['00','01','26','52','53','54','58','59','60','62','63'];
+    if(ids.join()!==ordem.join()) return 'A estrutura do código Pix está fora de ordem ou incompleta.';
+    const ult=c[c.length-1]; if(ult.n!==4||!/^[0-9A-F]{4}$/.test(ult.v)) return 'O final (CRC) do código Pix está errado.';
+    if(pixCRC(payload.slice(0,-4))!==ult.v) return 'O CRC do código Pix não confere.';
+    if(get('00')!=='01'||get('01')!=='11'||get('52')!=='0000'||get('53')!=='986'||get('58')!=='BR') return 'Algum campo fixo do código Pix está errado.';
+    if(!/^\d+\.\d{2}$/.test(get('54'))||get('54')!==r2(esp.valor).toFixed(2)) return 'O valor dentro do código Pix não é o valor da venda.';
+    const mai=pixLer(get('26')); if(mai.length!==2||mai[0].id!=='00'||mai[0].v!=='br.gov.bcb.pix'||mai[1].id!=='01'||mai[1].v!==esp.chave) return 'A chave dentro do código Pix não é a chave cadastrada.';
+    if(get('59')!==pixLimpa(esp.nome,25)||get('60')!==pixLimpa(esp.cidade,15)) return 'Nome ou cidade dentro do código Pix não conferem.';
+    const ad=pixLer(get('62')); if(ad.length!==1||ad[0].id!=='05'||!ad[0].v) return 'O campo adicional do código Pix está errado.';
+    return '';
+  }catch(e){ return 'O código Pix não pôde ser lido ('+(e&&e.message||e)+').'; }
+}
+function pixConfigurado(){
+  if(!(conf && conf.pix && conf.pix.chave)){ erro('Pix não configurado','Falta cadastrar a chave Pix.\nNo Livro Caixa: Contas → 💠 Configurar Pix. Depois abra o Livro Caixa de novo e volte aqui.'); return false; }
+  const e=pixValidaConfig(conf.pix);
+  if(e){ erro('Pix bloqueado','Não vou gerar o QR Code porque o cadastro do Pix tem problema:\n'+e+'\nConserte no Livro Caixa: Contas → 💠 Configurar Pix. Nada foi alterado.'); return false; }
+  return true;
+}
+/* id interno de tentativa (NÃO vai dentro do QR Code, que continua estático com ***):
+   fica o mesmo enquanto a gravação não foi confirmada, para repetir/reabrir não duplicar */
+let pixTent=null;
+function pixTentativa(chave){ if(!pixTent||pixTent.chave!==chave) pixTent={chave,id:uuid()}; return pixTent; }
+/* grava o recebimento e diz a verdade: 'servidor' (confirmado), 'pendente' (só no aparelho) ou 'falhou' */
+async function pixGravar(doc){
+  if(meus.some(m=>m.id===doc.id)) return 'ja_existia';
+  let ok=false, fal=null; const pr=db.collection('caixa_app_recebimentos').doc(doc.id).set(doc).then(()=>{ ok=true; },e=>{ fal=e; });
+  await Promise.race([pr,new Promise(r=>setTimeout(r,8000))]);
+  if(ok) return 'servidor'; if(fal) return 'falhou';
+  pr.then(()=>{ if(fal) erro('Pix NÃO foi enviado','O Pix de '+brl(doc.valor)+' de '+doc.cliente+' foi recusado pelo servidor. Motivo: '+(fal.message||fal)); });
+  return 'pendente';
+}
+let pixVendaOk=0, pixVendaTent=null;
 const CORES_G=['#3B6FE0','#D98F2B','#1E9E6B','#7A6BD6','#D5473F','#3AA6D9','#D96AA7','#8A94A6'];
 let vendaCfg=(function(){ try{ const j=JSON.parse(localStorage.getItem('caixa_vendacfg')||'null'); return j&&Array.isArray(j.grupos)?j:null; }catch(e){ return null; } })(), vkSeletor=[], grpSel='', orgD=null, orgG=0, orgQ='';
 let vkClientes=[], vkTabelas=[], vkPromos=[], cliSel=null, cliUsos=0, descOff=false;
 function pixAbrir(o){   // devolve true se o operador confirmou que o Pix entrou
   return new Promise(res=>{
     const px=conf.pix; let payload, svg;
-    try{ payload=pixPayload({chave:px.chave,nome:px.nome,cidade:px.cidade,valor:o.valor}); const q=qrcode(0,'M'); q.addData(payload); q.make(); svg=q.createSvgTag({cellSize:4,margin:3,scalable:true}); }
-    catch(e){ erro('Não consegui gerar o QR Code', e.message||String(e)); res(false); return; }
+    try{
+      payload=pixPayload({chave:px.chave,nome:px.nome,cidade:px.cidade,valor:o.valor});
+      const bad=pixValidar(payload,{chave:px.chave,nome:px.nome,cidade:px.cidade,valor:o.valor});
+      if(bad){ erro('Pix bloqueado','O código Pix gerado não passou na conferência e NÃO foi mostrado:\n'+bad+'\nNada foi gravado.'); res(false); return; }
+      const q=qrcode(0,'M'); q.addData(payload); q.make(); svg=q.createSvgTag({cellSize:4,margin:3,scalable:true});
+    }
+    catch(e){ erro('Não consegui gerar o QR Code', (e&&e.message)||String(e)); res(false); return; }
     const ov=document.createElement('div'); ov.id='pixOv'; ov.className='pixov';
     ov.innerHTML='<div class="pixcard"><div class="pt">💠 Pagamento por Pix</div><div class="pv">'+brl(o.valor)+'</div><div class="ps">'+esc(o.sub||'')+'</div>'
       +'<div class="pq">'+svg+'</div><div class="pm">Peça ao cliente para abrir o app do banco e escanear o QR Code. O valor já vai preenchido.</div>'
       +'<div class="pc"><input id="pxCod" readonly value="'+esc(payload)+'"><button id="pxCopiar">Copiar</button></div><div class="min" style="margin:0 0 4px">Pix copia e cola</div>'
-      +'<div class="pa">⚠️ Só toque em "Recebi o Pix" depois de ver o dinheiro entrar na sua conta do banco.</div>'
+      +'<div class="pa">⚠️ Só toque em "Recebi o Pix" depois de ver o dinheiro entrar na sua conta do banco.<br><span style="font-weight:600">Esse botão é a SUA confirmação. O app não consegue conferir com o banco.</span></div>'
       +'<div class="px2"><button class="btn ok" id="pxOk">✅ Recebi o Pix</button><button class="btn sec" id="pxNao">Cancelar</button></div></div>';
     document.body.appendChild(ov);
-    const fim=v=>{ document.removeEventListener('keydown',kd,true); ov.remove(); res(v); };
+    let fechado=false; const fim=v=>{ if(fechado) return; fechado=true; document.removeEventListener('keydown',kd,true); ov.remove(); res(v); };
     const kd=e=>{ if(e.key==='Escape'){ e.preventDefault(); e.stopImmediatePropagation(); fim(false); } else if(e.key==='Enter'||/^F\d+$/.test(e.key)){ e.preventDefault(); e.stopImmediatePropagation(); } };
     document.addEventListener('keydown',kd,true);
     $('#pxOk').onclick=()=>fim(true); $('#pxNao').onclick=()=>fim(false);
@@ -369,17 +448,21 @@ async function receberPix(){
   let v=num(($('#rValor')||{}).value); if(!(v>0)||v>rest) v=rest; v=r2(v);
   if(!(v>0)) return erro('Sem valor','Esse pedido não tem valor a receber.');
   if(data>hoje()) return erro('Data no futuro','A data não pode ser depois de hoje.');
+  const chaveTent='rec|'+chavePed(p)+'|'+v.toFixed(2)+'|'+data;
+  const dup=meus.find(m=>m.forma==='pix'&&(m.vkPedidoId||m.refId)===chavePed(p)&&Math.abs((Number(m.valor)||0)-v)<0.005&&m.status!=='erro'&&m.id!==(pixTent&&pixTent.chave===chaveTent?pixTent.id:'')&&(Date.now()-new Date(m.criadoEm||0).getTime())<10*60000);
+  if(dup && !(await confirmar('Já tem um Pix igual','Já foi registrado um Pix de '+brl(v)+' desse pedido há poucos minutos.\nSe o cliente pagou DE NOVO, continue. Se é o mesmo Pix, volte.','Foi outro Pix','Voltar'))) return;
   if(!(await pixAbrir({valor:v,sub:p.cliente+(p.numero?' · Pedido N° '+p.numero:'')}))) return;
-  salvando=true;
-  const id=uuid(), falta=r2(rest-v);
-  const doc={ id, kind:p.kind, refId:p.refId||'', vkPedidoId:p.vkPedidoId||'', cliente:p.cliente||'', numero:p.numero||'', descricao:p.descricao||'', vencimento:p.vencimento||'', valor:v, valorEntregue:v, troco:0, forma:'pix', data, status:'novo', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() };
+  if(salvando) return; salvando=true;
+  const T=pixTentativa(dup?chaveTent+'|novo':chaveTent), id=T.id, falta=r2(rest-v);
+  const doc={ id, tentativaId:id, kind:p.kind, refId:p.refId||'', vkPedidoId:p.vkPedidoId||'', cliente:p.cliente||'', numero:p.numero||'', descricao:p.descricao||'', vencimento:p.vencimento||'', valor:v, valorEntregue:v, troco:0, forma:'pix', confirmacao:'manual_operador', bancoConfirmou:false, data, status:'novo', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() };
   if(p.kind==='vk') doc.valorTotal = Number(p.valor)||0;
-  const pr=db.collection('caixa_app_recebimentos').doc(id).set(doc);
-  pr.catch(e=>erro('Não consegui enviar','O recebimento ficou guardado no aparelho. Motivo: '+(e.message||e)));
-  await Promise.race([pr.catch(()=>{}), new Promise(r=>setTimeout(r,1500))]);
-  salvando=false; sel=null; delete $('#app').dataset.tela; busca=''; buscaDesk='';
+  let r; try{ r=await pixGravar(doc); }catch(e){ r='falhou'; }
+  salvando=false;
+  if(r==='falhou'){ await erro('Pix NÃO foi gravado','O servidor recusou o registro. Nada foi lançado.\nSe o cliente já pagou, toque em Pix de novo e confirme outra vez (não vai duplicar).'); return; }
+  if(r==='servidor'||r==='ja_existia') pixTent=null;
+  sel=null; delete $('#app').dataset.tela; busca=''; buscaDesk='';
   if(!meus.some(m=>m.id===doc.id)) meus.unshift({...doc,pendente:true}); desenhar();
-  await aviso({titulo:'✔ Pix recebido!',tipo:'ok',texto:(offline?'Sem sinal agora. Ficou guardado no aparelho e vai sozinho quando o sinal voltar.\n':'')+brl(v)+' de '+doc.cliente+(falta>0.009?'\nFica faltando: '+brl(falta):'\nO pedido fica TOTALMENTE pago.')+'\nO Livro Caixa lança na conta '+esc((conf.pix&&conf.pix.contaNome)||'do Pix')+' quando for aberto.'});
+  await aviso({titulo:r==='pendente'?'⏳ Pix guardado, ainda NÃO enviado':'✔ Pix registrado (confirmado por você)',tipo:r==='pendente'?'':'ok',texto:(r==='pendente'?'Sem confirmação do servidor ainda. Ficou guardado no aparelho e vai sozinho quando o sinal voltar. Não toque em Pix de novo para esse mesmo pagamento.\n':'')+brl(v)+' de '+doc.cliente+(falta>0.009?'\nFica faltando: '+brl(falta):'\nO pedido fica TOTALMENTE pago.')+'\nO Livro Caixa lança na conta '+esc((conf.pix&&conf.pix.contaNome)||'do Pix')+' quando for aberto.'});
 }
 function totaisHoje(){
   const td=hoje(), hj=meus.filter(m=>m.data===td&&m.status!=='erro'), din=hj.filter(m=>m.forma!=='pix'), px=hj.filter(m=>m.forma==='pix'), soma=l=>l.reduce((s,m)=>s+(Number(m.valor)||0),0);
@@ -495,7 +578,7 @@ async function abrirVenda(){
   catch(e){ delete $('#app').dataset.tela; desenhar(); await erro('Não consegui carregar os produtos', /network/i.test(e.code||e.message)?'Sem internet. Tente de novo quando tiver sinal.':(e.message||String(e))); return; }
   desenhar(); listarProds();
 }
-function fecharVenda(){ delete $('#app').dataset.tela; carrinho=[]; parcOn=false; cliSel=null; cliUsos=0; descOff=false; desenhar(); }
+function fecharVenda(){ pixVendaOk=0; pixVendaTent=null; delete $('#app').dataset.tela; carrinho=[]; parcOn=false; cliSel=null; cliUsos=0; descOff=false; desenhar(); }
 
 /* ===== Cliente na venda direta: busca, cadastro, tabela de preços e desconto do Industrial ===== */
 function tabelaDe(c){ return c && c.tabelaPrecoId ? (vkTabelas.find(t=>t.id===c.tabelaPrecoId)||null) : null; }
@@ -636,12 +719,12 @@ async function concluirVenda(forma){
   if(forma==='pix' && !pixConfigurado()) return;
   if(rec<total-0.009) return erro('Valor recebido menor que o total','O cliente entregou '+brl(rec)+' e o total é '+brl(total)+'.');
   const troco=r2(rec-total);
-  if(forma==='pix'){ if(pixVendaOk!==total){ if(!(await pixAbrir({valor:total,sub:'Venda direta · '+carrinho.reduce((s,i)=>s+Number(i.quantidade||0),0)+' item(ns)'+(repSel?' · '+((vkReps.find(r=>r.id===repSel)||{}).nome||''):'')}))) return; pixVendaOk=total; } }
+  if(forma==='pix'){ if(pixVendaOk!==total){ pixVendaTent=null; if(!(await pixAbrir({valor:total,sub:'Venda direta · '+carrinho.reduce((s,i)=>s+Number(i.quantidade||0),0)+' item(ns)'+(repSel?' · '+((vkReps.find(r=>r.id===repSel)||{}).nome||''):'')}))) return; pixVendaOk=total; pixVendaTent={id:uuid(),pid:'ped_'+uuid().replace(/-/g,'').slice(0,18),numero:null}; } }
   else if(!(await confirmar('Concluir a venda?', (repSel?'Representante: '+((vkReps.find(r=>r.id===repSel)||{}).nome||'')+'\n':'')+(V.parcial?'📦 ENTREGA PARCIAL\n'+carrinho.filter(i=>entAgora(i)>0).map(i=>entAgora(i)+' × '+i.produto).join('\n')+'\n\nFalta entregar (fica pendente):\n'+faltaTxt:carrinho.map(i=>i.quantidade+' × '+i.produto).join('\n'))+(V.desc>0?'\n\nSubtotal: '+brl(V.sub)+'\nDesconto do cliente ('+V.pct+'%): − '+brl(V.desc):'')+'\n\n'+(V.parcial?'Pedido completo: '+brl(V.totalPedido)+'\nCobrar agora: ':'Total: ')+brl(total)+(troco>0?'\nRecebido: '+brl(rec)+' — devolver troco de '+brl(troco):''),'✅ Sim, concluir','Voltar'))) return;
   salvando=true; const b=$('#vOk'); if(b){ b.disabled=true; b.textContent='Salvando…'; }
   try{
-    const vdb=await vkDb(); const numero=await reservarNumeroPedido(vdb);
-    const agora=new Date().toISOString(), dia=hoje(), pid='ped_'+uuid().replace(/-/g,'').slice(0,18);
+    const vdb=await vkDb(); const TV=forma==='pix'?pixVendaTent:null; const numero=(TV&&TV.numero)||await reservarNumeroPedido(vdb); if(TV) TV.numero=numero;
+    const agora=new Date().toISOString(), dia=hoje(), pid=(TV&&TV.pid)||'ped_'+uuid().replace(/-/g,'').slice(0,18);
     const itens=carrinho.map(i=>({produto:i.produto,quantidade:i.quantidade,valorUnitario:i.valorUnitario,cor:'padrao',...(i.promocao?{promocao:i.promocao}:{}),...(V.parcial?{quantidadeEntregue:entAgora(i),quantidadeProduzida:entAgora(i)}:{})}));
     const ped={ id:pid, numero, clienteId:cliSel?cliSel.id:null, representanteId:repSel||'', data:dia, criadoEm:agora, dataEntrega:dia, dataFabricacaoNecessaria:'', dataDespacho:dia, itens, subtotal:V.sub, desconto:V.desc, valorTotal:V.totalPedido,
       observacoes:V.parcial?'Venda direta no Caixa VK — ENTREGA PARCIAL (falta entregar o restante)':'Venda direta no Caixa VK', bonificacao:false, enderecoEntrega:'', bairroEntrega:'', status:V.parcial?'parcial':'entregue', vendaDireta:true, pagamentoRealizado:!V.parcial, ...(V.parcial?{entregaParcial:true}:{}), origem:'caixa-vk', origemApp:'caixa-vk', aprovacao:{estado:'nao_exigida'}, ...(V.desc>0?{descontoOrigem:'cliente',descontoClienteRegraId:V.regra.id,descontoStatus:'aplicado'}:{}), ...(tabelaDe(cliSel)?{tabelaPrecoId:tabelaDe(cliSel).id,tabelaPrecoNome:tabelaDe(cliSel).nome}:{}),
@@ -651,13 +734,15 @@ async function concluirVenda(forma){
     // pedido de produto de revenda gera a despesa de custo, igual ao PDV do Industrial
     for(const it of carrinho){ const pr=vkProdutos.find(x=>x.id===it.produtoId); if(pr && pr.tipo==='revenda' && entAgora(it)>0){ try{ await vdb.collection('despesas_revenda').doc('desp_'+uuid().replace(/-/g,'').slice(0,18)).set({ produtoId:pr.id, produtoNome:pr.nome, quantidade:entAgora(it), custoUnitario:pr.custoCompra||0, custoTotal:r2(entAgora(it)*(pr.custoCompra||0)), pedidoId:pid, pedidoNumero:numero, data:dia, criadoEm:agora }); }catch(e){ console.error('despesa revenda',e); } } }
     // avisa o Livro Caixa (entra no Caixa físico como venda direta)
-    const id=uuid();
-    db.collection('caixa_app_recebimentos').doc(id).set({ id, kind:'vk', refId:'', vkPedidoId:pid, cliente:(cliSel?cliSel.nome:'Venda Direta'), numero:String(numero), descricao:'Pedido N° '+numero+' — '+(cliSel?cliSel.nome:'Venda Direta')+(V.parcial?' (entrega parcial)':''), vencimento:dia, valor:total, valorEntregue:r2(rec), troco, forma, data:dia, status:'novo', vendaDireta:true, valorTotal:V.totalPedido, ...(V.parcial?{entregaParcial:true}:{}), vendedorId:repSel||'', vendedorNome:(vkReps.find(r=>r.id===repSel)||{}).nome||'', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() }).catch(e=>erro('Não consegui avisar o Livro Caixa','A venda ficou salva no Industrial (pedido N° '+numero+'). Motivo: '+(e.message||e)));
-    salvando=false; pixVendaOk=0; delete $('#app').dataset.tela; carrinho=[]; parcOn=false; repSel=''; cliSel=null; cliUsos=0; descOff=false; if($('#vRec')) $('#vRec').value=''; if($('#vRep')) $('#vRep').value=''; desenhar(); desenharCliente(); desenharCarrinho();
-    await aviso({titulo:(V.parcial?'✔ Entrega parcial ':'✔ Venda ')+numero+' registrada',tipo:'ok',texto:brl(total)+(forma==='pix'?' recebidos no Pix.':(troco>0?'\nDevolva '+brl(troco)+' de troco.':''))+(V.parcial?'\n\n📦 FALTA ENTREGAR:\n'+faltaTxt+'\nFalta receber '+brl(V.falta)+' quando entregar o restante.\nO pedido ficou no Industrial como PARCIAL (Entregas parciais).':'\nO pedido já está no Industrial como venda direta.')+' O Livro Caixa lança '+(forma==='pix'?'na conta '+((conf.pix&&conf.pix.contaNome)||'do Pix'):'no Caixa físico')+' quando for aberto.'});
+    const id=(TV&&TV.id)||uuid(); const recDoc={ id, tentativaId:id, kind:'vk', refId:'', vkPedidoId:pid, cliente:(cliSel?cliSel.nome:'Venda Direta'), numero:String(numero), descricao:'Pedido N° '+numero+' — '+(cliSel?cliSel.nome:'Venda Direta')+(V.parcial?' (entrega parcial)':''), vencimento:dia, valor:total, valorEntregue:r2(rec), troco, forma, ...(forma==='pix'?{confirmacao:'manual_operador',bancoConfirmou:false}:{}), data:dia, status:'novo', vendaDireta:true, valorTotal:V.totalPedido, ...(V.parcial?{entregaParcial:true}:{}), vendedorId:repSel||'', vendedorNome:(vkReps.find(r=>r.id===repSel)||{}).nome||'', email:usuario.email, uid:usuario.uid, criadoEm:new Date().toISOString() };
+    let gr='servidor';
+    if(forma==='pix'){ gr=await pixGravar(recDoc); if(gr==='falhou'){ pixVendaOk=total; const ee=new Error('O pedido N° '+numero+' FOI salvo no Industrial, mas o aviso do Pix para o Livro Caixa foi recusado. Toque em Pix de novo para reenviar (não duplica o pedido).'); ee.soAviso=true; throw ee; } }
+    else db.collection('caixa_app_recebimentos').doc(id).set(recDoc).catch(e=>erro('Não consegui avisar o Livro Caixa','A venda ficou salva no Industrial (pedido N° '+numero+'). Motivo: '+(e.message||e)));
+    salvando=false; pixVendaOk=0; pixVendaTent=null; delete $('#app').dataset.tela; carrinho=[]; parcOn=false; repSel=''; cliSel=null; cliUsos=0; descOff=false; if($('#vRec')) $('#vRec').value=''; if($('#vRep')) $('#vRep').value=''; desenhar(); desenharCliente(); desenharCarrinho();
+    await aviso({titulo:(V.parcial?'✔ Entrega parcial ':'✔ Venda ')+numero+' registrada',tipo:'ok',texto:brl(total)+(forma==='pix'?' recebidos no Pix.':(troco>0?'\nDevolva '+brl(troco)+' de troco.':''))+(V.parcial?'\n\n📦 FALTA ENTREGAR:\n'+faltaTxt+'\nFalta receber '+brl(V.falta)+' quando entregar o restante.\nO pedido ficou no Industrial como PARCIAL (Entregas parciais).':'\nO pedido já está no Industrial como venda direta.')+(gr==='pendente'?'\n⏳ O aviso do Pix ficou só no aparelho e ainda NÃO chegou ao servidor (vai sozinho quando o sinal voltar).':'')+' O Livro Caixa lança '+(forma==='pix'?'na conta '+((conf.pix&&conf.pix.contaNome)||'do Pix'):'no Caixa físico')+' quando for aberto.'});
   }catch(e){
     salvando=false; const bb=$('#vOk'); if(bb){ bb.disabled=false; bb.textContent='✅ Concluir venda'; }
-    await erro('A venda NÃO foi salva', (e && e.message ? e.message : String(e))+(forma==='pix'?'\n⚠️ O Pix já foi confirmado: toque em Pix de novo (não vai pedir outro QR Code) para salvar a venda.':'\nConfira a internet e toque em Concluir de novo.'));
+    await erro(e&&e.soAviso?'Pix NÃO foi avisado ao Livro Caixa':'A venda NÃO foi salva', (e && e.message ? e.message : String(e))+(forma==='pix'&&!(e&&e.soAviso)?'\n⚠️ O Pix já foi confirmado: toque em Pix de novo (não vai pedir outro QR Code) para salvar a venda.':'\nConfira a internet e toque em Concluir de novo.'));
   }
 }
 function telaVenda(A){
